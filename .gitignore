@@ -1,0 +1,8 @@
+# Distribution / packaging
+
+# Dependency directories
+node_modules/
+
+
+# Lockfiles
+package-lock.json
