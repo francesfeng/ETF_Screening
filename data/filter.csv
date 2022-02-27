@@ -1,0 +1,405 @@
+AssetClass,Column,Label,Item,Count
+Equity,Country,Region,Global Broad,1007
+Equity,Country,Region,Global Developed,368
+Equity,Country,Region,Global Emerging,143
+Equity,Country,Region,Global Dev. ex-Europe,4
+Equity,Country,Region,Global ex-UK,1
+Equity,Country,Region,EuroZone,351
+Equity,Country,Region,Europe Developed,297
+Equity,Country,Region,Europe Dev. ex-UK,15
+Equity,Country,Region,Europe Emerging,6
+Equity,Country,Region,Europe Nordic,4
+Equity,Country,Region,Europe ex-EuroZone,2
+Equity,Country,Region,EMEA Emerging,1
+Equity,Country,Region,Europe Broad,1
+Equity,Country,Region,Europe Dev. ex-Switzerland,1
+Equity,Country,Region,Asia Dev. ex-Japan,17
+Equity,Country,Region,Asia ex-Japan,14
+Equity,Country,Region,Asia Emerging,13
+Equity,Country,Region,Asia Developed,5
+Equity,Country,Region,Asia Broad,4
+Equity,Country,Region,North America,16
+Equity,Country,Region,Latin America,9
+Equity,Country,Region,Middle East Gulf,1
+Equity,Country,Country,US,332
+Equity,Country,Country,UK,57
+Equity,Country,Country,Germany,41
+Equity,Country,Country,Japan,132
+Equity,Country,Country,China,39
+Equity,Country,Country,Switzerland,34
+Equity,Country,Country,Canada,14
+Equity,Country,Country,India,13
+Equity,Country,Country,Italy,12
+Equity,Country,Country,France,11
+Equity,Country,Country,Sweden,11
+Equity,Country,Country,Australia,10
+Equity,Country,Country,Brazil,10
+Equity,Country,Country,Russia,10
+Equity,Country,Country,South Korea,8
+Equity,Country,Country,Spain,6
+Equity,Country,Country,Taiwan,6
+Equity,Country,Country,South Africa,5
+Equity,Country,Country,Turkey,5
+Equity,Country,Country,HK,4
+Equity,Country,Country,Indonesia,4
+Equity,Country,Country,Malaysia,4
+Equity,Country,Country,Mexico,4
+Equity,Country,Country,Netherlands,4
+Equity,Country,Country,Norway,4
+Equity,Country,Country,Saudi Arabia,4
+Equity,Country,Country,Austria,3
+Equity,Country,Country,Kuwait,3
+Equity,Country,Country,Poland,3
+Equity,Country,Country,Africa,2
+Equity,Country,Country,Greece,2
+Equity,Country,Country,Singapore,2
+Equity,Country,Country,Thailand,2
+Equity,Country,Country,Bangladesh,1
+Equity,Country,Country,Belgium,1
+Equity,Country,Country,Bulgaria,1
+Equity,Country,Country,Croatia,1
+Equity,Country,Country,Czech Republic,1
+Equity,Country,Country,Denmark,1
+Equity,Country,Country,Finland,1
+Equity,Country,Country,Hungary,1
+Equity,Country,Country,Iceland,1
+Equity,Country,Country,Ireland,1
+Equity,Country,Country,Israel,1
+Equity,Country,Country,Macedonia,1
+Equity,Country,Country,Pakistan,1
+Equity,Country,Country,Philippines,1
+Equity,Country,Country,Portugal,1
+Equity,Country,Country,Romania,1
+Equity,Country,Country,Serbia,1
+Equity,Country,Country,Slovakia,1
+Equity,Country,Country,Slovenia,1
+Equity,Country,Country,Vietnam,1
+Equity,EquitySector,Sector,Information Technology,53
+Equity,EquitySector,Sector,Materials,43
+Equity,EquitySector,Sector,Consumer Discretionary,39
+Equity,EquitySector,Sector,Financials,33
+Equity,EquitySector,Sector,Energy,30
+Equity,EquitySector,Sector,Healthcare,28
+Equity,EquitySector,Sector,Industrials,26
+Equity,EquitySector,Sector,Consumer Staples,20
+Equity,EquitySector,Sector,Telecommunications,15
+Equity,EquitySector,Sector,Utilities,15
+Equity,EquitySector,Sector,ex-Financials,6
+Equity,EquitySector,Sector,Cyclical Sectors,1
+Equity,EquitySector,Sector,Defensive Sectors,1
+Equity,EquitySector,Sector,IPO Focused,1
+Equity,EquitySize,Size,All Cap,407
+Equity,EquitySize,Size,Large Cap,383
+Equity,EquitySize,Size,Large & Mid Cap,851
+Equity,EquitySize,Size,Mid Cap,37
+Equity,EquitySize,Size,Mid & Small Cap,13
+Equity,EquitySize,Size,Small Cap,37
+Equity,EquityFactorDes,Factor,Income,103
+Equity,EquityFactorDes,Factor,Low Volatility,47
+Equity,EquityFactorDes,Factor,Value,29
+Equity,EquityFactorDes,Factor,Quality,24
+Equity,EquityFactorDes,Factor,Momentum,11
+Equity,EquityFactorDes,Factor,Growth,5
+Equity,EquityFactorDes,Factor,Low Beta Correlation,1
+Equity,EquityFactorDes,Factor,Multi-Factor,128
+Equity,EquityStrategyDes,Strategy,Equal Weighted,27
+Equity,EquityStrategyDes,Strategy,Revenue Abroad,18
+Equity,EquityStrategyDes,Strategy,Buyback Yields,13
+Equity,EquityStrategyDes,Strategy,Absolute Returns,6
+Equity,EquityStrategyDes,Strategy,GDP Weighted,1
+Fixed Income,Country,Region,Global Developed,147
+Fixed Income,Country,Region,EuroZone,143
+Fixed Income,Country,Region,Global Broad,135
+Fixed Income,Country,Region,Global Emerging,59
+Fixed Income,Country,Region,Europe Developed,25
+Fixed Income,Country,Region,North America,4
+Fixed Income,Country,Region,Asia Emerging,2
+Fixed Income,Country,Region,Asia ex-Japan,1
+Fixed Income,Country,Country,US,148
+Fixed Income,Country,Country,UK,19
+Fixed Income,Country,Country,Germany,33
+Fixed Income,Country,Country,China,9
+Fixed Income,Country,Country,Italy,9
+Fixed Income,Country,Country,Switzerland,6
+Fixed Income,Country,Country,France,4
+Fixed Income,Country,Country,Spain,4
+Fixed Income,Country,Country,Japan,2
+Fixed Income,Country,Country,Russia,2
+Fixed Income,Country,Country,Australia,1
+Fixed Income,Country,Country,Sweden,1
+Fixed Income,FixedIncomeType,Type,Aggregate,56
+Fixed Income,FixedIncomeType,Type,Government,305
+Fixed Income,FixedIncomeType,Type,Government & Agencies,31
+Fixed Income,FixedIncomeType,Type,Inflation-linked,49
+Fixed Income,FixedIncomeType,Type,Investment Grade,166
+Fixed Income,FixedIncomeType,Type,High Yield,67
+Fixed Income,FixedIncomeType,Type,Corporate Broad,4
+Fixed Income,FixedIncomeType,Type,Rates,16
+Fixed Income,FixedIncomeType,Type,Contingent Convertible (CoCo),14
+Fixed Income,FixedIncomeType,Type,CDS,10
+Fixed Income,FixedIncomeType,Type,Covered Bond,10
+Fixed Income,FixedIncomeType,Type,Preferred Securities,7
+Fixed Income,FixedIncomeType,Type,Supranationals,6
+Fixed Income,FixedIncomeType,Type,Convertible,5
+Fixed Income,FixedIncomeType,Type,Green Bond,5
+Fixed Income,FixedIncomeType,Type,Securitised,3
+Fixed Income,FixedIncomeRatingGroup,Rating,Investment Grade,602
+Fixed Income,FixedIncomeRatingGroup,Rating,High Yield,72
+Fixed Income,FixedIncomeRatingGroup,Rating,Broad,80
+Fixed Income,FixedIncomeMaturityGroup,Maturity,Broad Maturity,421
+Fixed Income,FixedIncomeMaturityGroup,Maturity,Long (10Y+),34
+Fixed Income,FixedIncomeMaturityGroup,Maturity,Intermediate (3-10Y),175
+Fixed Income,FixedIncomeMaturityGroup,Maturity,Short (1-3Y),76
+Fixed Income,FixedIncomeMaturityGroup,Maturity,Ultra Short (up to 1Y),35
+Fixed Income,FixedIncomeMaturityGroup,Maturity,Money Market (Overnight),13
+Fixed Income,FixedIncomeDominateCurrencyGroup,Bond Currency,USD,278
+Fixed Income,FixedIncomeDominateCurrencyGroup,Bond Currency,EUR,283
+Fixed Income,FixedIncomeDominateCurrencyGroup,Bond Currency,GBP,31
+Fixed Income,FixedIncomeDominateCurrencyGroup,Bond Currency,CHF,9
+Fixed Income,FixedIncomeDominateCurrencyGroup,Bond Currency,CNY,9
+Fixed Income,FixedIncomeDominateCurrencyGroup,Bond Currency,JPY,2
+Fixed Income,FixedIncomeDominateCurrencyGroup,Bond Currency,AUD,1
+Fixed Income,FixedIncomeDominateCurrencyGroup,Bond Currency,SEK,1
+Fixed Income,FixedIncomeDominateCurrencyGroup,Bond Currency,Hard Currency,66
+Fixed Income,FixedIncomeDominateCurrencyGroup,Bond Currency,EM Local Currency,18
+Fixed Income,FixedIncomeDominateCurrencyGroup,Bond Currency,Multi-Currency,56
+Fixed Income,FixedIncomeFactorDes,Factor,Enhanced Yield ,16
+Fixed Income,FixedIncomeFactorDes,Factor,Quality ,12
+Fixed Income,FixedIncomeFactorDes,Factor,Multi-Factor,4
+Fixed Income,FixedIncomeStrategyDes,Strategy,Inflation Breakeven,6
+Fixed Income,FixedIncomeStrategyDes,Strategy,Risk weighted,5
+Fixed Income,FixedIncomeStrategyDes,Strategy,Duration Neutral,4
+Fixed Income,FixedIncomeStrategyDes,Strategy,Macro Weighted,4
+Fixed Income,FixedIncomeStrategyDes,Strategy,Time-based Weight,4
+Fixed Income,FixedIncomeStrategyDes,Strategy,Curve Steepener,3
+Fixed Income,FixedIncomeStrategyDes,Strategy,Quality Weighted,3
+Fixed Income,FixedIncomeStrategyDes,Strategy,Curve Flattener,2
+Fixed Income,FixedIncomeStrategyDes,Strategy,Delta Hedge,2
+Fixed Income,FixedIncomeStrategyDes,Strategy,Equal Weighted,2
+Fixed Income,FixedIncomeStrategyDes,Strategy,Fundamental Weighted,2
+Fixed Income,FixedIncomeStrategyDes,Strategy,GDP Weighted,2
+Commodity,CommodityUnderlying,Broad,Broad Basket,55
+Commodity,CommodityUnderlying,Broad,Industrial Metals,16
+Commodity,CommodityUnderlying,Broad,ex-Agriculture & Livestock,13
+Commodity,CommodityUnderlying,Broad,Agriculture,11
+Commodity,CommodityUnderlying,Broad,Energy,11
+Commodity,CommodityUnderlying,Broad,Precious Metals,8
+Commodity,CommodityUnderlying,Broad,ex-Energy,6
+Commodity,CommodityUnderlying,Broad,Energy & Metals,3
+Commodity,CommodityUnderlying,Broad,ex-Agriculture,2
+Commodity,CommodityUnderlying,Broad,ex-Grains,2
+Commodity,CommodityUnderlying,Broad,ex-Precious Metals,2
+Commodity,CommodityUnderlying,Precious Metals,Gold,62
+Commodity,CommodityUnderlying,Precious Metals,Silver,32
+Commodity,CommodityUnderlying,Precious Metals,Platinum,20
+Commodity,CommodityUnderlying,Precious Metals,Palladium,17
+Commodity,CommodityUnderlying,Precious Metals,Rhodium,1
+Commodity,CommodityUnderlying,Energy,WTI Crude Oil,28
+Commodity,CommodityUnderlying,Energy,Brent Crude Oil,23
+Commodity,CommodityUnderlying,Energy,Natural Gas,17
+Commodity,CommodityUnderlying,Energy,Heating Oil,7
+Commodity,CommodityUnderlying,Energy,Gasoline,6
+Commodity,CommodityUnderlying,Energy,Gas Oil,4
+Commodity,CommodityUnderlying,Energy,Petroleum,4
+Commodity,CommodityUnderlying,Energy,Emission,1
+Commodity,CommodityUnderlying,Industrial Metals,Copper,11
+Commodity,CommodityUnderlying,Industrial Metals,Nickel,8
+Commodity,CommodityUnderlying,Industrial Metals,Zinc,8
+Commodity,CommodityUnderlying,Industrial Metals,Aluminum,7
+Commodity,CommodityUnderlying,Industrial Metals,Lead,5
+Commodity,CommodityUnderlying,Industrial Metals,Tin,5
+Commodity,CommodityUnderlying,Industrial Metals,Broad Basket,2
+Commodity,CommodityUnderlying,Agriculture,Livestock,6
+Commodity,CommodityUnderlying,Agriculture,Wheat,5
+Commodity,CommodityUnderlying,Agriculture,Coffee,4
+Commodity,CommodityUnderlying,Agriculture,Corn,4
+Commodity,CommodityUnderlying,Agriculture,Grains,4
+Commodity,CommodityUnderlying,Agriculture,Softs,4
+Commodity,CommodityUnderlying,Agriculture,Soybeans,4
+Commodity,CommodityUnderlying,Agriculture,Sugar,4
+Commodity,CommodityUnderlying,Agriculture,Cotton,3
+Commodity,CommodityUnderlying,Agriculture,Lean Hogs,3
+Commodity,CommodityUnderlying,Agriculture,Live Cattle,3
+Commodity,CommodityUnderlying,Agriculture,Soybean Oil,2
+Commodity,CommodityUnderlying,Agriculture,Cocoa,1
+Commodity,CommoditySpotForward,Forwardness,Prompt,344
+Commodity,CommoditySpotForward,Forwardness,Constant Maturity,54
+Commodity,CommoditySpotForward,Forwardness,3M,42
+Commodity,CommoditySpotForward,Forwardness,1Y,2
+Commodity,CommoditySpotForward,Forwardness,2Y,2
+Commodity,CommoditySpotForward,Forwardness,3Y,2
+Commodity,CommodityStrategyDes,Strategy,Physical Held,110
+Commodity,CommodityStrategyDes,Strategy,Roll Optimised,71
+Commodity,CommodityStrategyDes,Strategy,Weight Capped,11
+Commodity,CommodityStrategyDes,Strategy,Equal Weight,2
+Commodity,CommodityStrategyDes,Strategy,Long/Short,2
+Structured,StructuredMultiple,Leverage Multiple,1x,19
+Structured,StructuredMultiple,Leverage Multiple,2x,136
+Structured,StructuredMultiple,Leverage Multiple,3x,132
+Structured,StructuredMultiple,Leverage Multiple,4x,18
+Structured,StructuredMultiple,Leverage Multiple,5x,62
+Structured,StructuredMultiple,Leverage Multiple,10x,2
+Structured,StructuredMultiple,Leverage Multiple,15x,2
+Structured,StructuredMultiple,Leverage Multiple,-1x,95
+Structured,StructuredMultiple,Leverage Multiple,-2x,52
+Structured,StructuredMultiple,Leverage Multiple,-3x,93
+Structured,StructuredMultiple,Leverage Multiple,-4x,14
+Structured,StructuredMultiple,Leverage Multiple,-5x,22
+Structured,StructuredMultiple,Leverage Multiple,-10x,2
+Structured,StructuredMultiple,Leverage Multiple,-15x,2
+Structured,StructuredTracking,Commodity,Agriculture,3
+Structured,StructuredTracking,Commodity,Aluminum,3
+Structured,StructuredTracking,Commodity,Brent Crude Oil,14
+Structured,StructuredTracking,Commodity,Broad Market,3
+Structured,StructuredTracking,Commodity,Cocoa,11
+Structured,StructuredTracking,Commodity,Coffee,6
+Structured,StructuredTracking,Commodity,Copper,20
+Structured,StructuredTracking,Commodity,Corn,3
+Structured,StructuredTracking,Commodity,Cotton,2
+Structured,StructuredTracking,Commodity,Energy,2
+Structured,StructuredTracking,Commodity,Gasoil,4
+Structured,StructuredTracking,Commodity,Gasoline,3
+Structured,StructuredTracking,Commodity,Gold,32
+Structured,StructuredTracking,Commodity,Grains,2
+Structured,StructuredTracking,Commodity,Heating Oil,2
+Structured,StructuredTracking,Commodity,Industrial Metals,2
+Structured,StructuredTracking,Commodity,Lead,2
+Structured,StructuredTracking,Commodity,Lean Hogs,4
+Structured,StructuredTracking,Commodity,Live Cattle,4
+Structured,StructuredTracking,Commodity,Livestock,2
+Structured,StructuredTracking,Commodity,Natural Gas,31
+Structured,StructuredTracking,Commodity,Nickel,6
+Structured,StructuredTracking,Commodity,Palladium,6
+Structured,StructuredTracking,Commodity,Petroleum,2
+Structured,StructuredTracking,Commodity,Platinum,7
+Structured,StructuredTracking,Commodity,Precious Metals,2
+Structured,StructuredTracking,Commodity,Silver,31
+Structured,StructuredTracking,Commodity,Softs,2
+Structured,StructuredTracking,Commodity,Soybean Oil,3
+Structured,StructuredTracking,Commodity,Soybeans,2
+Structured,StructuredTracking,Commodity,Sugar,5
+Structured,StructuredTracking,Commodity,Tin,2
+Structured,StructuredTracking,Commodity,WTI Crude Oil,41
+Structured,StructuredTracking,Commodity,Wheat,6
+Structured,StructuredTracking,Commodity,Zinc,2
+Structured,StructuredTracking,Commodity,ex-Energy,2
+Structured,StructuredTracking,Currency,Long AUD,5
+Structured,StructuredTracking,Currency,Long CAD,2
+Structured,StructuredTracking,Currency,Long CHF,3
+Structured,StructuredTracking,Currency,Long EUR,8
+Structured,StructuredTracking,Currency,Long GBP,5
+Structured,StructuredTracking,Currency,Long GBP ,1
+Structured,StructuredTracking,Currency,Long JPY,7
+Structured,StructuredTracking,Currency,Long USD,9
+Structured,StructuredTracking,Currency,Short AUD,5
+Structured,StructuredTracking,Currency,Short CAD,2
+Structured,StructuredTracking,Currency,Short CHF,3
+Structured,StructuredTracking,Currency,Short EUR,6
+Structured,StructuredTracking,Currency,Short GBP,6
+Structured,StructuredTracking,Currency,Short JPY,7
+Structured,StructuredTracking,Currency,Short USD,9
+Structured,StructuredTracking,Equity Index,CAC 40,7
+Structured,StructuredTracking,Equity Index,DAX,35
+Structured,StructuredTracking,Equity Index,DJIA - Dow Jones Industrial Average,8
+Structured,StructuredTracking,Equity Index,FTSE 100,17
+Structured,StructuredTracking,Equity Index,FTSE China 50,2
+Structured,StructuredTracking,Equity Index,HSCEI - Hang Seng China Enterprises Index,8
+Structured,StructuredTracking,Equity Index,IBEX,3
+Structured,StructuredTracking,Equity Index,MDAX,9
+Structured,StructuredTracking,Equity Index,MIB,11
+Structured,StructuredTracking,Equity Index,MSCI Emerging Markets,5
+Structured,StructuredTracking,Equity Index,MSCI USA,2
+Structured,StructuredTracking,Equity Index,Nasdaq 100,12
+Structured,StructuredTracking,Equity Index,PSI,1
+Structured,StructuredTracking,Equity Index,S&P 500,22
+Structured,StructuredTracking,Equity Index,SHI - Hang Seng Index,6
+Structured,StructuredTracking,Equity Index,SMI,1
+Structured,StructuredTracking,Equity Index,STOXX,37
+Structured,StructuredTracking,Equity Index,TECDAX,8
+Structured,StructuredTracking,Fixed Income,EuroZone Government,3
+Structured,StructuredTracking,Fixed Income,France OAT,4
+Structured,StructuredTracking,Fixed Income,German Bund,22
+Structured,StructuredTracking,Fixed Income,German Schatz (Short Term),6
+Structured,StructuredTracking,Fixed Income,Italy BTP,10
+Structured,StructuredTracking,Fixed Income,UK Gilt,3
+Structured,StructuredTracking,Fixed Income,US Treasuries,11
+Structured,StructuredTracking,Fixed Income,iTraxx Crossover,1
+Structured,StructuredTracking,Individual Stocks,AAPL,1
+Structured,StructuredTracking,Individual Stocks,AMZN,1
+Structured,StructuredTracking,Individual Stocks,Astrazeneca,2
+Structured,StructuredTracking,Individual Stocks,BAE Systems,2
+Structured,StructuredTracking,Individual Stocks,BP,2
+Structured,StructuredTracking,Individual Stocks,Barclays,2
+Structured,StructuredTracking,Individual Stocks,C,1
+Structured,StructuredTracking,Individual Stocks,CRM,1
+Structured,StructuredTracking,Individual Stocks,CSCO,1
+Structured,StructuredTracking,Individual Stocks,DIS,1
+Structured,StructuredTracking,Individual Stocks,Diageo,2
+Structured,StructuredTracking,Individual Stocks,FB,1
+Structured,StructuredTracking,Individual Stocks,GE,1
+Structured,StructuredTracking,Individual Stocks,GOOG,1
+Structured,StructuredTracking,Individual Stocks,GS,1
+Structured,StructuredTracking,Individual Stocks,Glencore,2
+Structured,StructuredTracking,Individual Stocks,IBM,1
+Structured,StructuredTracking,Individual Stocks,INTC,1
+Structured,StructuredTracking,Individual Stocks,JNJ,1
+Structured,StructuredTracking,Individual Stocks,JPM,1
+Structured,StructuredTracking,Individual Stocks,KD,1
+Structured,StructuredTracking,Individual Stocks,Lloyds,2
+Structured,StructuredTracking,Individual Stocks,MCD,1
+Structured,StructuredTracking,Individual Stocks,MSFT,1
+Structured,StructuredTracking,Individual Stocks,NFLX,1
+Structured,StructuredTracking,Individual Stocks,NKE,1
+Structured,StructuredTracking,Individual Stocks,NVDA,1
+Structured,StructuredTracking,Individual Stocks,ORCL,1
+Structured,StructuredTracking,Individual Stocks,PEE,1
+Structured,StructuredTracking,Individual Stocks,PYPL,1
+Structured,StructuredTracking,Individual Stocks,Rio Tinto,2
+Structured,StructuredTracking,Individual Stocks,Rolls-Royce,2
+Structured,StructuredTracking,Individual Stocks,SBUX,1
+Structured,StructuredTracking,Individual Stocks,Shell,2
+Structured,StructuredTracking,Individual Stocks,V,1
+Structured,StructuredTracking,Individual Stocks,Vodafone,2
+Alternative & Multi-Assets,SubAssetClass,Asset Type,Real Estate,39
+Alternative & Multi-Assets,SubAssetClass,Asset Type,Hedge Fund,4
+Alternative & Multi-Assets,SubAssetClass,Asset Type,Private Equity,3
+Alternative & Multi-Assets,SubAssetClass,Asset Type,Volatility,5
+Alternative & Multi-Assets,SubAssetClass,Asset Type,Multi-Asset,13
+Alternative & Multi-Assets,SubAssetClass,Asset Type,Cryptocurrency,12
+Thematic,EquitySubSector,Focus,Infrastructure & Energy Midstream MLP,13
+Thematic,EquitySubSector,Focus,Breakthrough Healthcare,7
+Thematic,EquitySubSector,Focus,Internet & Ecommerce,6
+Thematic,EquitySubSector,Focus,Natural Resources,6
+Thematic,EquitySubSector,Focus,Artificial Intelligence,5
+Thematic,EquitySubSector,Focus,Automation & Robotics,5
+Thematic,EquitySubSector,Focus,Cloud Technology,5
+Thematic,EquitySubSector,Focus,Cyber Security,5
+Thematic,EquitySubSector,Focus,Digitalisation,5
+Thematic,EquitySubSector,Focus,Smart City,5
+Thematic,EquitySubSector,Focus,Battery Value-Chain,4
+Thematic,EquitySubSector,Focus,Future Mobility,3
+Thematic,EquitySubSector,Focus,Medical Cannabis,3
+Thematic,EquitySubSector,Focus,Renewable Energy,3
+Thematic,EquitySubSector,Focus,Blockchain,2
+Thematic,EquitySubSector,Focus,Commodity Producers: Agriculture,1
+Thematic,EquitySubSector,Focus,Commodity Producers: Gold Miners,1
+Thematic,EquitySubSector,Focus,Commodity Producers: Oil & Gas,1
+Thematic,EquitySubSector,Focus,Fintech,1
+Thematic,EquitySubSector,Focus,IPO Focused,1
+Thematic,EquitySubSector,Focus,Millennial Focus,1
+Currency,CurrencyBucket1,Commodity Nations,Long Commodity Nations,2
+Currency,CurrencyBucket1,Commodity Nations,Short Commodity Nations,2
+Currency,CurrencyBucket1,G10,Long G10,5
+Currency,CurrencyBucket1,G10,Short G10,3
+Currency,CurrencyBucket1,Pair,CHF,8
+Currency,CurrencyBucket1,Pair,JPY,8
+Currency,CurrencyBucket1,Pair,AUD,7
+Currency,CurrencyBucket1,Pair,CAD,7
+Currency,CurrencyBucket1,Pair,NOK,7
+Currency,CurrencyBucket1,Pair,SEK,7
+Currency,CurrencyBucket1,Pair,NZD,6
+Currency,CurrencyBucket1,Pair,USD,6
+Currency,CurrencyBucket1,Pair,CNY,4
+Currency,CurrencyBucket1,Pair,EUR,4
+Currency,CurrencyBucket1,Pair,GBP,4
+Currency,CurrencyBucket1,Pair,INR,4

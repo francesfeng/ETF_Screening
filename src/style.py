@@ -1,3 +1,10 @@
+def color_palette():
+    main_palette = ["#304FFE", "#FFC400","#FF206E", "#00E5FF","#1A237E","#6C6AFF","#FF9100","#00CC88","#651FFF","#795548"]
+    sequential_palette = ["#1A237E", "#164394", "#1164A9", "#0D84BF", "#09A4D4", "#04C5EA", "#00E5FF"]
+    return main_palette, sequential_palette
+
+
+
 def lab_theme():
     font = "Sans-serif"
 
@@ -6,20 +13,7 @@ def lab_theme():
     legendBackgroundColor = '#F7F8FA'
 
     # Colors
-    main_palette = ["#304FFE", 
-                    "#FFC400",
-                    "#FF206E",
-                    "#00E5FF",
-                    "#1A237E",
-                    "#6C6AFF",
-                    "#FF9100",
-                    "#00CC88",
-                    "#651FFF",
-                    "#795548",
-                    
-                   ]
-    sequential_palette = ["#1A237E", "#164394", "#1164A9", "#0D84BF", "#09A4D4", "#04C5EA", "#00E5FF"]
-
+    main_palette, sequential_palette = color_palette()
 
     return {
             "config": {

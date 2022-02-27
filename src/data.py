@@ -4,8 +4,8 @@ from psycopg2 import sql
 import pandas as pd
 import numpy as np
 import copy
+from src import api
 
-from conn import api
 
 @st.cache(allow_output_mutation=True, hash_funcs={"_thread.RLock": lambda _: None, 'builtins.weakref': lambda _: None})
 def init_connection():
@@ -18,482 +18,453 @@ def run_query(query, conn):
         cur.execute(query)
         return cur.fetchall()
 
+
+def get_filters():
+    path = './data/filter.csv'
+    filter_pd = pd.read_csv(path)
+
+    return filter_pd
+
 @st.cache(allow_output_mutation=True, hash_funcs={psycopg2.extensions.connection: lambda _: None})
-def get_portfolio_holding(benchmark_name, conn):
+def initialise_data(asset_class, conn):
+    if asset_class == 'Equity':
+        results = pd.read_sql(api.init_equity(), con=conn)
+    elif asset_class == 'Fixed Income':
+        results = pd.read_sql(api.init_fi(), con=conn)
+    elif asset_class == 'Commodity':
+        results = pd.read_sql(api.init_commodity(), con=conn)
+    elif asset_class == 'Currency':
+        results = pd.read_sql(api.init_currency(), con=conn)
+    elif asset_class == 'Structured':
+        results = pd.read_sql(api.init_structured(), con=conn)
+    elif asset_class == 'Alternative & Multi-Assets':
+        results = pd.read_sql(api.init_alt(), con=conn)
+    elif asset_class == 'Thematic':
+        results = pd.read_sql(api.init_thematic(), con=conn) 
 
-    # get benchmark weight
-    weights = pd.read_sql(api.get_benchmark_weight(benchmark_name), con = conn) 
-    weights = weights.groupby(by=["ISINCode"]).sum()  # incase there are duplciates ETFs in a portfolio
-
-    
-    # get benchmark holding dictionary
-    etfs = pd.read_sql(api.get_etf_details_for_portfolio(weights.index), conn).set_index("ISINCode")
-
-    etfs = etfs.drop_duplicates() # delete this once duplicated ETFs are resolved in a portfolio
-    etfs = pd.concat([etfs, weights], axis=1).sort_values("Weight", ascending=False)
-
-    holding_etfs = etfs.to_dict(orient='index') 
-    #TODO: When converting from pandas to dictionary, Weight 3.5 converts into 3.50000001
-    for k in holding_etfs:
-        holding_etfs[k]['Weight'] = round(holding_etfs[k]['Weight'],2)
-
-    # get benchmark rank
-    ranks = {}
-    rank_categories = ["Portfolio", "Cost", "Return", "AUM", "Tracking Error", "Volume", "Rank"]
-    benchmark_ranks = run_query(api.get_benchmark_rank(benchmark_name), conn)[0]
-    for i in range(1, len(benchmark_ranks)):
-        ranks[rank_categories[i]] = benchmark_ranks[i]
-    
-    
-    # get benchmark holding type
-    benchmark_holding_type = run_query(api.get_benchmark_holding_type(benchmark_name), conn)
-    benchmark_holding_top10 = run_query(api.get_benchmark_holding_top10(benchmark_name), conn)
-    
-    holdings = benchmark_holding_type + benchmark_holding_top10
-
-    
-    return holding_etfs, ranks, holdings
-
-
-#@st.cache(hash_funcs={psycopg2.extensions.connection: lambda _: None})
-def init_data(conn):
-    # get benchmark portfolios
-    benchmarks = pd.read_sql(api.get_benchmarks(), con = conn)
-    benchmarks = benchmarks.rename(columns ={'count': '# Holdings', 'Rank5': 'Ranks', 'Return': '1 Month %'})
-
-    # get benchmark risk & return
-    benchmark_perf = pd.read_sql(api.get_benchmark_risk_return(), con=conn)
-
-    benchmarks_names = benchmarks['Portfolio'].unique()
-
-    default_benchmark = benchmarks_names[0]
-
-    #get full ETF list
-    etfs_all = run_query(api.get_unique_fund_list(), conn)
-    #etfs_all.insert(0, [''])
-
-
-    return benchmarks, benchmark_perf ,benchmarks_names, etfs_all
-
-
-
-@st.cache(hash_funcs={psycopg2.extensions.connection: lambda _: None})
-def calc_rank(isins, weights, conn):
-    ranks = pd.read_sql(api.get_ranks(isins), con=conn).set_index("ISINCode")
-
-    weights_pd = pd.DataFrame.from_dict(weights, orient = 'index')/100
-
-    ranks_pd = ranks.reindex(weights_pd.index)
-    ranks_pd = ranks_pd.fillna(0)  # TODO: no rank assumed 0 ranking
-    port_rank = np.matrix(ranks_pd.values * weights_pd.values).sum(axis=0).astype(int)  
-    port_rank_pd = pd.DataFrame(port_rank, columns = ranks_pd.columns)
-
-    return port_rank_pd
-
-@st.cache(hash_funcs={psycopg2.extensions.connection: lambda _: None})
-def calc_holding_top10(isins, weights, base_portfolio_holding_type, base_portfolio_name, benchmark_holding_type, benchmark_name , conn, is_customise = False):
-
-    benchmark_pd = pd.DataFrame(benchmark_holding_type, columns=['Portfolio', 'HoldingType', 'HoldingName', 'port_weight'])
-    benchmark_pd['Portfolio'] = 'Benchmark'
-    benchmark_pd['Name'] = benchmark_name
-
-    if is_customise == False:
-        base_pd = pd.DataFrame(base_portfolio_holding_type, columns=['Portfolio', 'HoldingType', 'HoldingName', 'port_weight'])
-        base_pd['Portfolio'] = 'Portfolio'
-        base_pd['Name'] = base_portfolio_name
-        
-        holding_all = base_pd.merge(benchmark_pd, how='outer', on = ["HoldingType", "HoldingName"], suffixes = ('_x', '_y'), copy=True)
-
-    else: 
-        # calculate top 10 holdings, when portfolio top10 and benchmark top10 have more than 10 names (non-overlapping), prioritise portfolio
-        holding_type = pd.read_sql(api.get_holding_type(isins), con = conn)
-        holding_top10 = pd.read_sql(api.get_holding_top10(isins), con = conn)
-        holding_pd = pd.concat([holding_type, holding_top10], axis=0, ignore_index=True)
-
-        weights_pd = pd.DataFrame.from_dict(weights, orient = 'index')/100
-        weights_pd_idx = weights_pd.reset_index().rename(columns ={'index': "ISINCode", 0: "PortWeight"})
-        weights_pd_idx["ISINCode"] = weights_pd_idx["ISINCode"].astype(str)
-
-        holding_pd = holding_pd.merge(weights_pd_idx, on='ISINCode', how='left')
-        holding_pd['port_weight']=round(holding_pd['Weight'] * holding_pd["PortWeight"],2)
-        holding_pd = holding_pd.groupby(['HoldingType','HoldingName'])['port_weight'].sum().reset_index().sort_values(["HoldingType", "port_weight"], ascending=False)
-        holding_pd['Portfolio'] = 'My portfolio'
-        holding_pd['Name'] = 'My portfolio'
-        holding_all = holding_pd.merge(benchmark_pd, how='outer', on = ["HoldingType", "HoldingName"], suffixes = ('_x', '_y'), copy=True)
-    
-
-    holding_top10 = pd.DataFrame()
-
-    for s in holding_all['HoldingType'].unique():
-        holding_top10 = pd.concat([holding_top10, holding_all[holding_all['HoldingType'] == s][:10]], axis=0, ignore_index=True)
-
-    holding_top10 = pd.concat([\
-        holding_top10.loc[~holding_top10['Portfolio_x'].isna(), ["HoldingType", "HoldingName", 'port_weight_x', 'Portfolio_x', 'Name_x']].rename(columns = {'port_weight_x': 'Weight', 'Portfolio_x': 'Portfolio', 'Name_x': 'Name'}),\
-        holding_top10.loc[~holding_top10['Portfolio_y'].isna(), ["HoldingType", "HoldingName", 'port_weight_y', 'Portfolio_y', 'Name_y']].rename(columns = {'port_weight_y': 'Weight', 'Portfolio_y': 'Portfolio', 'Name_y': 'Name'})],\
-        axis=0, ignore_index=True)
-
-    holding_top10 = holding_top10.rename(columns ={'HoldingType': 'Type', 'HoldingName': 'Holding'})
-    holding_top10['Weight'] = holding_top10['Weight']/100
-  
-    
-    return holding_top10
-
-@st.cache(hash_funcs={psycopg2.extensions.connection: lambda _: None})
-def calc_holding_all(isins, weights, conn):
-    weights_pd = pd.DataFrame.from_dict(weights, orient = 'index')/100
-    weights_pd_idx = weights_pd.reset_index().rename(columns ={'index': "ISINCode", 0: "PortWeight"})
-
-    holding_all_pd = pd.read_sql(api.get_holding_all(isins), con = conn)
-    holding_all_pd = holding_all_pd.merge(weights_pd_idx,  on="ISINCode", how='left')
-    holding_all_pd['port_weight'] = round(holding_all_pd['Weight'] * holding_all_pd['PortWeight'], 4)
-    #holding_all_pd = holding_all_pd.fillna('')
-
-    #TODO: once find Notes or Bond name, can eliminated the != 'Note condition'
-    holding_all_pd = holding_all_pd[(holding_all_pd['port_weight']>0) & (holding_all_pd['InstrumentDescription']!= '-' ) & (holding_all_pd['InstrumentDescription']!= 'Note' )]
-    holding_all_pd = holding_all_pd.groupby(['InstrumentDescription', 'Country','Flag' ,'Sector'])['port_weight'].sum().reset_index().sort_values('port_weight', ascending=False)
-    
-    holding_all_pd = holding_all_pd[holding_all_pd['port_weight']>=0.01].rename(columns = {'InstrumentDescription': 'Name', 'port_weight': 'Weight'})
-    holding_all_pd['Weight'] = holding_all_pd['Weight']/100
-
-    return holding_all_pd
-
-
-
-@st.cache(hash_funcs={psycopg2.extensions.connection: lambda _: None})
-def get_inception_date(isins, conn):
-    return run_query(api.get_inception_date(isins), conn)[0][0]
-
-
-@st.cache(hash_funcs={psycopg2.extensions.connection: lambda _: None})
-def get_ts(isins, start_date, conn):
-    price = pd.read_sql(api.get_ts_price(isins), con = conn)
-    price = price.pivot(index="TimeStamp", columns="ISINCode", values=["NAV_USD", "TR_USD", "GBP", "EUR"])
-
-    price = price.fillna(method="ffill")
-
-    div = pd.read_sql(api.get_ts_div(isins, start_date), con = conn)
-    return price, div
-
-
-# return portfolio performance (rebased at 100), 
-# individual ETFs' performance (rebased at 100), and 
-# shares allocated to each ETF at rebalance date(only for PR, used for dividend accumulating calculation)
-@st.cache(allow_output_mutation=True)
-def calc_return(price, weights_dict, rebalance_frequency, currency):
-    navs_pd = price['NAV_USD']
-    tr_pd = price['TR_USD']
-
-    if currency == 'GBP':
-        navs_pd = navs_pd * price['GBP']
-        tr_pd = tr_pd * price['GBP']
-    if currency == 'EUR':
-        navs_pd = navs_pd * price['EUR']
-        tr_pd = tr_pd * price['EUR']
-
-    navs = navs_pd.values 
-    tr = tr_pd.values
-
-    
-    weights = pd.DataFrame(weights_dict, index=[0])
-
-    weights = weights[price['NAV_USD'].columns].values/100
-
-
-    dates = pd.to_datetime(price.index, utc=True)
-
-    if rebalance_frequency == 'Monthly':
-        period = pd.DatetimeIndex(dates).month
-    if rebalance_frequency == 'Quarterly':
-        period = pd.DatetimeIndex(dates).quarter
-    if rebalance_frequency == 'Annual':
-        period = pd.DatetimeIndex(dates).year
-
-    period_next = period[1:]
-    rebal_idx = period[:-1] != period_next
-
-    notional = np.zeros((len(navs),1))
-    notional_tr = np.zeros((len(tr),1))
-    notional[0] = 100
-    notional_tr[0] = 100
-
-    shares = np.zeros((0,len(navs[0, :])))
-    shares_tr = np.zeros((0,len(tr[0, :])))
-
-    shares_dic = {}
-    shares_tr_dic = {}
-
-    for i in range(len(navs)-1):
-        if i ==0 or rebal_idx[i]==True:
-            shares = np.true_divide(notional[i] * weights, navs[i,:])
-            shares_tr= np.true_divide(notional_tr[i] * weights, tr[i, :])
-            shares_dic[dates[i].strftime('%Y-%m-%d')] = np.squeeze(shares)
-            shares_tr_dic[dates[i].strftime('%Y-%m-%d')] = np.squeeze(shares_tr)
-        
-        notional[i+1] = np.sum(navs[i+1,:] * shares)
-        notional_tr[i+1] = np.sum(tr[i+1, :] * shares_tr)
-
-    performance = pd.DataFrame(np.column_stack([notional, notional_tr, dates]), columns = ['PR', 'TR', 'Dates']).set_index('Dates')
-
-    # calculate individual ETFs performance contribution
-    performance_isins_navs = navs_pd * (100 / navs[0, :]) 
-    performance_isins_tr = tr_pd * (100 / tr[0, :]) 
-    performance_isins = pd.concat([performance_isins_navs, performance_isins_tr], axis=1, keys = ['PR', 'TR'])
-    performance_isins.index = dates
-
-    shares_pr_pd = pd.DataFrame.from_dict(shares_dic, orient='index', columns=navs_pd.columns)
-    shares_tr_pd = pd.DataFrame.from_dict(shares_tr_dic, orient='index', columns=tr_pd.columns)
-    shares_pd = pd.concat([shares_pr_pd, shares_tr_pd], axis=1, keys=['PR','TR'])
-
-    return performance, performance_isins, shares_pd
-
-
-@st.cache
-def calc_div(dividends, shares, currency):
-    
-    if currency == 'USD':
-        div_col = 'Div_USD'
-    elif currency == 'GBP':
-        div_col = 'Div_GBP'
     else:
-        div_col = 'Div_EUR'
+        return
 
-    divs_pd = dividends[['TimeStamp','ISINCode',div_col]].pivot_table(index="TimeStamp", columns = "ISINCode")[div_col]
-    divs_pd.index = pd.to_datetime(divs_pd.index, utc=True)
+    return results
 
-    shares_pd = shares[divs_pd.columns]
-    shares_pd.index = pd.to_datetime(shares_pd.index, utc=True)
+@st.cache(allow_output_mutation=True, hash_funcs={psycopg2.extensions.connection: lambda _: None})
+def get_etfs_data(isins, conn):
+    query_overview = api.get_by_isin(isins, "gcp_funds", ["ISINCode", "Ticker", "ExchangeTicker", "FundName", "Exchange", "TradeCurrency", "Price", "1DChange",
+            "Volume3M", "FundCurrency", "NAV", "NAV_1DChange", "AUM","AUM_USD", "AUM_EUR", "AUM_GBP",
+            "DistributionIndicator", "TotalExpenseRatio", "ETPIssuerName", "IndexName", "Rank5"])
+    data_overview = pd.read_sql(query_overview, con = conn)
 
-    div_shares = pd.concat([divs_pd,shares_pd], axis=1, join='outer', keys=['Div', 'Shares'])
-    total_div = div_shares['Div'] * div_shares['Shares'].shift(1)
-    total_div.columns = div_shares['Div'].columns
-    total_div['Total'] = total_div.sum(axis=1)
+    query_perf = api.get_by_isin(isins, "calc_return_period", ["ISINCode", "Type", "Description", "Return"])
+    data_perf = pd.read_sql(query_perf, con = conn)
 
-    total_div = total_div[total_div['Total'] != 0]
+    data_fundflow = pd.read_sql(api.get_fundflows(isins), con = conn)
 
-    return total_div
-
-@st.cache
-def convert_performance(port_returns, bench_returns, port_name, bench_name, inception_value, inception_date ):
-
-    port_perf = copy.deepcopy(port_returns)
-    bench_perf = copy.deepcopy(bench_returns)
-
-    port_perf['Type'] = port_name
-    bench_perf['Type'] = bench_name
+    return data_overview, data_perf, data_fundflow
 
 
-    # st.write(port_perf)
-    # st.write(bench_perf)
-    performance = pd.concat([port_perf, bench_perf], axis=0)
-    #st.write(performance)
-    perf_pivot = performance.pivot(columns ='Type')[['PR','TR']]
+def table_format(data, display, exchange=None ,currency=None, return_type=None):
 
-    perf_select = perf_pivot[perf_pivot.index >= pd.to_datetime(inception_date, utc=True)]
-    perf_select = perf_select * (inception_value/100)
+    names = data['overview'][['ISINCode','ExchangeTicker','FundName','Exchange']]
+    if exchange != 'All':
+        names = names[names['Exchange'] == exchange]        
 
-    perf_select_melt = perf_select.melt(ignore_index=False).rename(columns={None: 'Dividend', 'value': 'Return'})
-    perf_select_melt['Dates'] = perf_select_melt.index.strftime('%Y-%m-%d')
-
-    return perf_select, perf_select_melt
-
-
-@st.cache
-def convert_div(port_return, bench_return, port_div, bench_div, port_name, bench_name, inception_value, inception_date):
-
-    # port_income = port_div * (inception_value/100)
-    # bench_income = bench_div * (inception_value/100)
-
-    port_cum = port_div.cumsum(axis=0)['Total'].rename('Income')
-    bench_cum = bench_div.cumsum(axis=0)['Total'].rename('Income')
-    interval = ''
-
-    max_len = max(len(port_return), len(bench_return))
-    if  max_len > 52 * 5 * 2:
-        interval = 'year'
-    elif max_len > 52 * 2 * 2:
-        interval = 'quarter'
-    else:
-        interval = 'month'
-        
-
-
-    def __convert_div(perf, div, interval):
-        tr = pd.concat([perf[['Type','PR']], div], axis=1)
-        tr[['PR', 'Income']] = tr[['PR','Income']].fillna(method='ffill')
-        tr = tr[tr.index >= pd.to_datetime(inception_date, utc=True)]
-        tr[['PR','Income']] = tr[['PR','Income']] * (inception_value/100)
-
-        if interval == 'year':
-            years = tr.index.year 
-            idx = years[:-1] != years[1:] 
-        elif interval == 'quarter':
-            quarters = tr.index.quarter
-            idx = quarters[:-1] != quarters[1:]
+    output_data = pd.DataFrame()
+    if display == 'Overview':
+        if currency == 'USD':
+            currency_col = 'AUM_USD'
+        elif currency == 'GBP':
+            currency_col = 'AUM_GBP'
+        elif currency == 'EUR':
+            currency_col = 'AUM_EUR'
         else:
-            months = tr.index.month
-            idx = months[:-1] != months[1:]
+            currency_col = 'AUM'
 
-        idx = np.append(idx, True)
-        div = tr[idx]
+        col_names = ['ISINCode','ExchangeTicker', 'FundName', 'Exchange', 'TradeCurrency', 'Price', '1DChange', 'Volume3M', 'FundCurrency', 'NAV', 'NAV_1DChange',\
+              currency_col, 'DistributionIndicator', 'TotalExpenseRatio', 'ETPIssuerName', 'IndexName', 'Rank5' ]
+        output_data = data['overview'][col_names]
+        output_data = output_data.rename(columns = {'1DChange': 'Price_1DChange', currency_col: 'AUM'})
+        if exchange != 'All':
+            output_data = output_data[output_data['Exchange'] == exchange]
 
-        return tr, div[['Type', 'Income']]
 
-    port_tr, port_income = __convert_div(port_return, port_cum, interval)
-    bench_tr, bench_income = __convert_div(bench_return, bench_cum, interval)
+    elif display == 'Performance':
+        des = return_type
+        des = 'Calendar' if return_type == 'Calendar Year' else des
+        output_data = data['performance']
+        output_data = output_data[output_data['Type'] == des]
+        output_data = output_data.pivot(index='ISINCode', columns='Description', values='Return').reset_index()
+        if return_type == 'Calendar Year':
+            year_rename = 'Year' + output_data.columns
+            output_data.columns = year_rename
+            output_data = output_data[year_rename[::-1]]
+            output_data = output_data.rename(columns={'YearISINCode': 'ISINCode', 'YearYTD': 'YTD'})
+        output_data = names.merge(output_data, how='left', on='ISINCode')
 
-    combined_tr = pd.concat([port_tr, bench_tr], axis=0).rename(columns={'PR': 'Return'})
-    combined_tr = combined_tr[~combined_tr['Type'].isna()]
-    combined_tr['Income'] =combined_tr['Income'].fillna(0)  
-    combined_tr['TR'] = combined_tr['Return'] + combined_tr['Income']
-    combined_tr['Dates'] = combined_tr.index.strftime('%Y-%m-%d')
+    
 
-    combined_div = pd.concat([port_income, bench_income], axis=0)
-    if interval == 'year':    
-        combined_div['Dates'] = combined_div.index.year
+    elif display == 'Fund Flow':
+        if currency == 'USD':
+            flow_col = 'flow_USD'
+            aum_col = 'AUM_USD'
+        elif currency == 'EUR':
+            flow_col = 'flow_EUR'
+            aum_col = 'AUM_EUR'
+        elif currency == 'GBP':
+            flow_col = 'flow_GBP'
+            aum_col = 'AUM_GBP'
+        else:
+            flow_col = 'flow_local'
+            aum_col = 'AUM'
+
+        col_names = ["ISINCode", "Description", "Currency", aum_col, flow_col]
+        output_data = data['flow'][col_names]
+        output_data = output_data.rename(columns={aum_col: 'AUM',flow_col: 'Flow'})
+        output_flow = output_data.pivot(index='ISINCode', columns='Description', values='Flow').reset_index()
+        output_data = output_flow.merge(output_data[['ISINCode', 'Currency', 'AUM']].drop_duplicates(), how='left', on='ISINCode')
+        output_data = names.merge(output_data, how='left', on='ISINCode')
+
+
     else:
-        combined_div['Dates'] = combined_div.index.strftime('%Y-%m-%d')
-   
+        return
 
-    return combined_tr, combined_div
+    output_data = output_data.fillna('')   #fill NA value as '' in fees column, otherwise react has json error
+    output_data.insert(loc=0, column='id', value = np.arange(0, len(output_data)))
+
+    return output_data
+
+@st.cache
+def num_format(num, currency=None):
+    num_abs = abs(num)
+    sign = '-' if num<0 else ''
+    output = ''
+    if num_abs > 999999999:
+        output = str(round(num_abs / 1000000000,1)) +'B'
+    elif num_abs > 999999:
+        output = str(round(num_abs / 1000000,1)) +'M'
+    elif num_abs > 999:
+        output = str(round(num_abs / 1000,1)) +'K'
+    else:
+        output = str(round(num_abs,1))
+
+    if currency is not None:
+        output = currency + (' ' if len(currency) == 3 else '') + output
+    return sign + output
+
+@st.cache
+def rank_format(rank):
+    output = ''
+    if rank == 5:
+        output = '⭐⭐⭐⭐⭐'
+    elif rank ==4:
+        output = '⭐⭐⭐⭐'
+    elif rank ==3:
+        output = '⭐⭐⭐'
+    elif rank ==2:
+        output = '⭐⭐'
+    else:
+        output = '⭐'
+    return output
 
 
 @st.cache
-def calc_relative_perf(isin_perf, port_perf, isin_names_dict):
-
-    isin_perf_relative = (isin_perf - port_perf.values.reshape((-1,1)))/100
-
-    isin_perf_melt = isin_perf_relative.melt(ignore_index=False).rename(columns={'value': 'Return'})
-    isin_names_pd = pd.DataFrame.from_dict(isin_names_dict, orient='index').reset_index().rename(columns={'index': "ISINCode", 0: 'Name'})
-
-    isin_perf_melt = isin_perf_melt.reset_index().merge(isin_names_pd, how='left', on="ISINCode").set_index("TimeStamp")
-
-    isin_perf_melt['Dates'] = isin_perf_melt.index.strftime('%Y-%m-%d')
-
-    # get top5 and bottom5 performing ETF ISINs
-    latest = isin_perf_relative[-1:].melt(ignore_index=True).sort_values('value', ascending=True)["ISINCode"]
-    bottom5 = latest.head(5)
-    top5 = latest.tail(5)
-    return isin_perf_melt, top5, bottom5
+def currency_revert(currency):
+    return 'USD' if currency == '$' else 'EUR' if currency == '€' else 'GBP' if currency == '£' else currency
 
 @st.cache
-def calc_mom_perf(isin_perf, port_perf, isin_names_dict, port_name):
-    # MoM returns
-    months = isin_perf.index.month 
-    idx = months[:-1] != months[1:]
-    idx = np.append(idx, True)
-    isin_perf_month = isin_perf[idx]
-    isin_perf_month = isin_perf_month/isin_perf_month.shift(1) -1
-    isin_perf_month = isin_perf_month[1:]
+def currency_format(currency):
+    return '$' if currency == 'USD' else '€' if currency == 'EUR' else '£' if currency == 'GBP' else 'GBp ' if currency == 'GBX' else str(currency) + ' '
 
-    isin_perf_month_melt = isin_perf_month.melt(ignore_index=False).rename(columns={'value': 'Return'})
-    isin_names_pd = pd.DataFrame.from_dict(isin_names_dict, orient='index').reset_index().rename(columns={'index': "ISINCode", 0: 'Name'})
-
-    isin_perf_month_melt = isin_perf_month_melt.reset_index().merge(isin_names_pd, how='left', on="ISINCode").set_index("TimeStamp")
-
-    isin_perf_month_melt['Dates'] = isin_perf_month_melt.index.strftime('%Y-%m-%d')
-
-
-    port_perf_month = port_perf[idx]
-    port_perf_month = port_perf_month / port_perf_month[0] - 1
-    port_perf_month = port_perf_month[1:].reset_index().rename(columns={'PR': 'Return'})
-    port_perf_month['Dates'] = port_perf_month['Dates'].dt.strftime('%Y-%m-%d')
-    port_perf_month['Name'] = port_name
-
-    return isin_perf_month_melt, port_perf_month
-
-#@st.cache
-def calc_calender_return(perf_pivot):
-    years = perf_pivot.index.year
-    calendar_years = pd.unique(years)
-    idx = years[:-1] != years[1:]
-    idx = np.append(idx, True)
-    perf_calendar = perf_pivot[idx]
-    perf_calendar = perf_calendar / perf_calendar.shift(1) -1 
-    perf_calendar = perf_calendar[1:]
-    perf_calendar = perf_calendar.melt(ignore_index=False).rename(columns={None: 'Dividend', 'value': 'Return'})
-
-    perf_calendar['Year'] = calendar_label = [str(i) + ' YTD' if i==max(calendar_years) else str(i) for i in perf_calendar.index.year]
-    return perf_calendar
-
-#@st.cache
-def calc_cumulative_return(perf_pivot):
-    period_idx = np.array([5, 14, 28, 54, 53*3+1, 53*5+2, 53*10+3])
-    period = np.array(['1 month', '3 month', '6 month', '1 year', '3 year', '5 year', '10 year'])
-    period_num = np.array([0, 0, 0, 1, 3, 5, 10])
-    valid_idx = period_idx[period_idx<len(perf_pivot)]
-    cum_idx = -1*valid_idx
-    cum_label = period[period_idx<len(perf_pivot)]
-    cum_num = period_num[period_idx<len(perf_pivot)]
-
-    perf_cum = np.true_divide(perf_pivot[-1:].values, perf_pivot.iloc[cum_idx,:].values) -1
-    perf_cum = pd.DataFrame(perf_cum, columns = perf_pivot.columns, index = cum_label)
-
-
-    # only select period > 1Y for annualised return
-    perf_annual = perf_cum[cum_num>=1]
-    cum_num_valid = cum_num[cum_num>=1]
+@st.cache(allow_output_mutation=True, hash_funcs={psycopg2.extensions.connection: lambda _: None})
+def get_etf_overview(ticker, data_dict, conn):
+    etf_info = {}
+    data_overview = data_dict['overview']
     
-    if len(cum_num_valid) > 0:
-        perf_annual_np = np.power(perf_annual.values + 1, 1/np.expand_dims(cum_num_valid, axis=1)) -1
-        perf_annual = pd.DataFrame(perf_annual_np, columns = perf_annual.columns, index=cum_label[cum_num>=1])
-        perf_annual = perf_annual.melt(ignore_index=False).reset_index().rename(columns={'index': 'Period', 'value': 'Return'})
+    data_overview = data_overview[data_overview['ExchangeTicker'] == ticker].to_dict(orient='records')[0]
+    isin = data_overview['ISINCode']
+    etf_info['ISINCode'] = isin
+    data_perf = data_dict['performance']
+    data_perf = data_perf[data_perf['ISINCode'] == isin]
 
+    etf_info['ExchangeTicker'] = data_overview['ExchangeTicker']
+    etf_info['Name'] = data_overview['FundName']
+    etf_info['Exchange'] = data_overview['Exchange']
+    etf_info['ExchangePrice'] = data_overview['TradeCurrency'] + (' ' if len(data_overview['TradeCurrency']) ==3 else '') + str(round(data_overview['Price'],2))
+    etf_info['TradingCurrency'] = currency_revert(data_overview['TradeCurrency'])
+    etf_info['Volume'] = num_format(data_overview['Volume3M'])
+    etf_info['NAV'] = data_overview['FundCurrency'] + (' ' if len(data_overview['FundCurrency']) ==3 else '') + str(round(data_overview['NAV'],2))
+    etf_info['FundCurrency'] = currency_revert(data_overview['FundCurrency'])
+    etf_info['NAV_1MChange'] = round(float(data_perf.loc[(data_perf['ISINCode'] == isin) & (data_perf['Description'] == '1M'),'Return']),2)
+
+    perf_3y = data_perf.loc[(data_perf['Description'] == '3Y') & (data_perf['Type'] == 'Cumulative'), 'Return']
+    if len(perf_3y) == 0:
+        etf_info['NAV_3YChange_Cum'] = '-'
+        etf_info['NAV_3YChange_Ann'] = '-'
     else:
-        perf_annual = pd.DataFrame()
-    perf_cum = perf_cum.melt(ignore_index=False).reset_index().rename(columns={'index': 'Period', 'value': 'Return'})
-    
-    return perf_cum, perf_annual, cum_label, cum_label[cum_num>=1]
+        etf_info['NAV_3YChange_Cum'] = str(round(perf_3y,2))+'%'
+        perf_3m_ann = data_perf.loc[(data_perf['Description'] == '3Y') & (data_perf['Type'] == 'Annualised'), 'Return']
+        etf_info['NAV_3YChange_Ann'] = str(round(perf_3m_ann,2))+'%'
 
-#@st.cache
-def calc_drawdown(data_pivot):
+    etf_info['AUM'] = data_overview['FundCurrency'] + (' ' if len(data_overview['FundCurrency']) ==3 else '') + num_format(data_overview['AUM'])
+    etf_info['Cost'] = data_overview['TotalExpenseRatio']
+    etf_info['Rank'] = rank_format(data_overview['Rank5'])
+    etf_info['IndexName'] = data_overview['IndexName']
+    etf_info['Distribution'] = data_overview['DistributionIndicator']
+
+
+    funds = pd.read_sql(api.get_by_isin([isin], 'gcp_funds', ['DateLatest','Objective', 'AssetClass', 'Sector'], 1), con=conn)
+    funds = funds.to_dict(orient='records')[0]
+    etf_info['DateLatest'] = pd.to_datetime(funds['DateLatest']).strftime('%Y-%m-%d')
+    etf_info['Objective'] = funds['Objective']
+    etf_info['AssetClass'] = funds['AssetClass']
+    etf_info['Sector'] = funds['Sector']
+
+    rank = pd.read_sql(api.get_by_isin([isin], 'calc_rank', ['CostRank', 'ReturnRank', 'AUMRank', 'TrackingErrorRank', 'VolumeRank', 'Rank', 
+                        'sector_CostRank', 'sector_ReturnRank', 'sector_AUMRank', 'sector_TrackingErrorRank', 'sector_VolumeRank', 'sectorRank']), con = conn)
+    
+    etf_info['Ranks'] = rank.to_dict(orient='records')[0]
+
+
+    flow = pd.read_sql(api.get_by_isin([isin], 'calc_fundflow_period', ['Description','flow_local','flow_USD', 'flow_EUR', 'flow_GBP', 'sectorflow_USD', 'sectorflow_EUR', 'sectorflow_GBP']), con=conn)
+    etf_info['Flow'] = flow.set_index('Description').to_dict(orient='dict')
+    etf_info['AUM_1MChange'] = num_format(float(etf_info['Flow']['flow_local']['1M']), data_overview['FundCurrency'])
+
+    similar_etfs= pd.read_sql(api.get_similar_etfs([isin]), con = conn)
+    similar_etfs = similar_etfs[~similar_etfs['ISINCode'].duplicated()]
+    similar_top = pd.read_sql(api.get_1m_perf(similar_etfs['ISINCode'].head(5)), con=conn)
+    etf_info['Similar_ETFs'] = similar_etfs.groupby('Description')['ISINCode'].apply(list).to_dict()
+    etf_info['Similar_ETFs_top'] = similar_top.drop_duplicates().to_dict(orient='records')
+
+
+    holding = pd.read_sql(api.get_top5_holding([isin]), con=conn)
+    holding = holding.rename(columns={'InstrumentDescription': 'Name'})
+    etf_info['Top5'] = holding.to_dict(orient='records')
+
+    navs = pd.read_sql(api.get_navs_weekly([isin]), con = conn)
+    navs["TimeStamp"] = pd.to_datetime(navs['TimeStamp'], utc=True)
+    navs['Dates'] = navs["TimeStamp"].dt.strftime('%Y-%m-%d')
+    return etf_info, navs[["TimeStamp",'Dates', 'NAV']]
+
+
+def get_etf_details(isin, conn):
+    data = pd.read_sql(api.get_details(isin), con = conn)
+    data['LaunchDate'] = pd.to_datetime(data['LaunchDate'], utc=True).dt.strftime('%Y-%m-%d')
+    if data['exDivDate'] is not None:
+        data['exDivDate'] = pd.to_datetime(data['exDivDate'], utc=True).dt.strftime('%Y-%m-%d')
+    
+    data = data.to_dict(orient='records')[0]
+    if data['Dividend'] is not None:
+        data['Dividend'] = currency_format(data['Currency']) + str(round(data['Dividend'],2))
+    data['UCITS'] = 'Yes' if data['UCITS'] == True else 'No'
+
+    data['Volatility'] = str(round(data['Volatility'],2))+'%' if not (data['Volatility'] is None) else '-'
+    data['Drawdown'] = str(round(data['Drawdown'],2))+'%' if not(data['Drawdown'] is None) else '-'
+    data['TrackingError3Y'] = str(round(data['TrackingError3Y'],4)) if not(data['TrackingError3Y'] is None) else '-'
+    return data
+
+
+def get_listing(isin, conn):
+    data = pd.read_sql(api.get_listings(isin), con = conn)
+    #data.insert(loc=0, column='id', value = np.arange(0, len(data)))
+    #data['Price'] = data[['TradingCurrency', 'Price']]currency_format(data['TradingCurrency']) + str(round(data['Price'],2))
+    data['Volume3M'] = data['Volume3M'].apply(lambda x: num_format(x))
+    data['Price'] = data['TradingCurrency'].apply(lambda x: currency_format(x)) + data['Price'].apply(lambda x: str(round(x,2)))
+    
+    data = data.to_dict(orient='records')
+    
+    #st.write(data['TradingCurrency'])
+    return data
+
+
+def get_tr(isins, start_date, conn):
+    data_tr = pd.read_sql(api.get_tr(isins, start_date), con=conn)  
+    data = data_tr
+    data['TimeStamp'] = pd.to_datetime(data['TimeStamp'], utc=True)
+    data['Dates'] = data['TimeStamp'].dt.strftime('%Y-%m-%d')
+    return data
+
+
+def normalise(data, names_pd):
+    data_norm = data.pivot(index='TimeStamp', columns='ISINCode', values='TotalReturn')
+    data_norm = data_norm.fillna(method='ffill')
+    data_norm = data_norm.dropna(axis=0, how='any')
+    
+
+    data_initial = 100/data_norm[:1]
+    data_norm = data_norm * data_initial.values
+
+    data_norm = data_norm.melt(ignore_index=False).reset_index()
+
+    data_norm = data_norm.merge(names_pd, how='left', on='ISINCode')
+    data_norm = data_norm.rename(columns={'value': 'TotalReturn'})
+    data_norm['Dates'] = data_norm['TimeStamp'].dt.strftime('%Y-%m-%d')
+    return data_norm
+
+
+def __convert_period_stats(data, period_names, names, value='Return', is_num = True, nan_convert = 0):
+    data_pivot = data.pivot(index='ISINCode', columns='Description', values=value)
+    if is_num == True:
+        data_pivot = data_pivot/100
+    valid_period_names = period_names[:len(data_pivot.columns)-1]
+    names_pd = names.set_index('ISINCode')
+    data_pivot = pd.concat([names_pd, data_pivot], axis=1)
+    data_pivot = data_pivot[['FundName'] + list(valid_period_names)].reindex(names['ISINCode'])
+    data_pivot = data_pivot.fillna(nan_convert)
+    return data_pivot.to_dict(orient='records'), valid_period_names
+
+
+
+def get_perf_period(isins, names_pd, conn):
+    data = pd.read_sql(api.get_by_isin(isins, 'calc_return_period', ["ISINCode", "Type", "Description", "Return" ]), con=conn)
+    #data = data.merge(names_pd, how='left', on="ISINCode")
+    cumulative = data.loc[data['Type'] == 'Cumulative', ['ISINCode', 'Description', 'Return']]
+    #cumulative = cumulative.pivot_table(index='FundName', columns='Description', values='Return')
+    period_names = ['1M', '3M', '6M','YTD','1Y', '3Y', '5Y','10Y']
+    cumulative, cum_periods = __convert_period_stats(cumulative, period_names, names_pd)
+
+    annualised = data.loc[data['Type'] == 'Annualised', ['ISINCode', 'Description', 'Return']]
+    annualised, ann_periods = __convert_period_stats(annualised, ['1Y', '3Y', '5Y', '10Y'], names_pd)
+
+
+    calendar = data.loc[data['Type'] == 'Calendar', ['ISINCode', 'Description', 'Return']]
+    cal_names = calendar['Description'].unique()
+    calendar, cal_periods = __convert_period_stats(calendar, cal_names, names_pd)
+    
+    return cumulative, cum_periods, annualised, ann_periods, calendar, cal_periods
+
+
+def volatility(data, names_pd):
+    data_pivot = data.pivot(index='TimeStamp', columns='ISINCode', values='TotalReturn')
+    data_pivot = data_pivot.fillna(method='ffill')
+    data_pivot = data_pivot.dropna(axis=0, how='any')
+
+    ret = data_pivot / data_pivot.shift(1) - 1
+
+    vol = ret.rolling(30).std(ddof=0) * np.sqrt(252)
+    vol = vol.dropna(how='all')
+    vol = vol.melt(ignore_index=False).reset_index()
+    vol = vol.merge(names_pd, how='left', on='ISINCode')
+    vol = vol.rename(columns={'value': 'Volatility'})
+    vol['Dates'] = vol['TimeStamp'].dt.strftime('%Y-%m-%d')
+
+    return vol
+
+def get_vol_period(isins, names_pd, conn):
+    vol = pd.read_sql(api.get_vol_period(isins), con = conn)
+    vol = vol.merge(names_pd, how='left', on="ISINCode")
+
+    vol_pivot, vol_names = __convert_period_stats(vol, ['1Y', '3Y', '5Y', '10Y'], names_pd, 'Volatility')
+    
+    return vol_pivot, vol_names
+
+
+def drawdown(data, names_pd):
+    data_pivot = data.pivot(index='TimeStamp', columns='ISINCode', values='TotalReturn')
+    data_pivot = data_pivot.fillna(method='ffill')
+    data_pivot = data_pivot.dropna(axis=0, how='any')
+
     max_pd = data_pivot.rolling(len(data_pivot), min_periods=1).max()
-    drawdown = data_pivot / max_pd - 1
+    drawdown = data_pivot / max_pd -1 
 
-    drawdown = drawdown.melt(ignore_index=False).rename(columns={None: 'Dividend', 'value': 'Drawdown'})
-    drawdown['Dates'] = drawdown.index.strftime('%Y-%m-%d')
+    drawdown = drawdown.melt(ignore_index=False).reset_index()
+    drawdown = drawdown.merge(names_pd, how='left', on='ISINCode')
+    drawdown = drawdown.rename(columns={'value': 'Drawdown'})
+    drawdown['Dates'] = drawdown['TimeStamp'].dt.strftime('%Y-%m-%d')
 
     return drawdown
 
 
-@st.cache
-def get_crisis(file_path):
-    crisis = pd.read_csv(file_path)
-    crisis['Start'] = pd.to_datetime(crisis['Start'], utc=True)
-    crisis['End'] = pd.to_datetime(crisis['End'], utc=True)
+def get_drawdown_period(isins, names_pd, conn):
+    dd = pd.read_sql(api.get_drawdown_period(isins), con = conn)
+    dd['DateDrawdown'] = pd.to_datetime(dd['DateDrawdown'], utc=True).dt.strftime('%Y-%m-%d')
 
-    return crisis
+    dd_pivot, dd_names = __convert_period_stats(dd, ['1Y', '3Y', '5Y', '10Y'], names_pd, 'Drawdown')
+    #st.write(dd_pivot)
+
+    dd_date_pivot, _ = __convert_period_stats(dd, ['1Y', '3Y', '5Y', '10Y'], names_pd, 'DateDrawdown', is_num=False, nan_convert='')
+    return dd_pivot, dd_date_pivot, dd_names
+
+def get_holding(isin, conn):
+    holding_all = pd.read_sql(api.get_holding_all(isin), con=conn)
+    holding_all = holding_all.rename(columns={'InstrumentDescription': 'Holding'})
+    top = holding_all[['Holding', 'Weight']].head(10)
+    top['HoldingType'] = 'Top10'
+
+    holding_type = pd.read_sql(api.get_holding_type(isin), con=conn)
+    holding_type = holding_type.rename(columns={'HoldingName': 'Holding'})
+    holding_type = pd.concat([holding_type, top], axis=0)
+
+    holding_all['Weight'] = holding_all['Weight']/100
+    holding_type['Weight'] = holding_type['Weight']/100
+
+    return holding_type, holding_all
 
 
-#@st.cache
-def calc_vol(data, frequency):
-    return_wk = data / data.shift(1) -1
-    vol = return_wk.rolling(frequency).std(ddof=0)*np.sqrt(252)
-    vol = vol.dropna(how='all')
-    vol = vol.melt(ignore_index=False).rename(columns={None: 'Dividend', 'value': 'Volatility'})
-    vol['Dates'] = vol.index.strftime('%Y-%m-%d')
+def get_fundflow(isins, flow_currency, names_pd, conn):
+    flow_monthly = pd.read_sql(api.get_by_isin(isins, 'calc_fundflow_monthly', ['ISINCode', 'TimeStamp', flow_currency]), con=conn)
+    flow_monthly = flow_monthly.merge(names_pd, how='left', on="ISINCode")
+    flow_monthly['TimeStamp'] = pd.to_datetime(flow_monthly['TimeStamp'], utc=True)
+    flow_monthly['Dates'] = flow_monthly['TimeStamp'].dt.strftime('%Y-%m-%d')
 
-    return vol
+    flow_period = pd.read_sql(api.get_by_isin(isins, 'calc_fundflow_period', ["ISINCode", "Description", "flow_USD", "flow_EUR", "flow_GBP"]), con=conn)
 
-def calc_updown(data):
-    ret = data/data.shift(1) - 1
-    ret = ret.melt(ignore_index=False).rename(columns={'value': 'Return'})
-    ret['Dates'] = ret.index.strftime('%Y-%m-%d')
-    ret['Sign'] = ret['Return'].apply(lambda x: 'Positive' if x>0 else 'Negative')
+    return flow_monthly
 
-    return ret
+def get_flow_period(isins, flow_currency, names_pd, conn):
+    flow_period = pd.read_sql(api.get_by_isin(isins, 'calc_fundflow_period', ["ISINCode", "Description", flow_currency]), con=conn)
+    flow_period[flow_currency] = flow_period[flow_currency].apply(lambda x: num_format(x))
+    flow_pivot, flow_names = __convert_period_stats(flow_period, ['1M','3M','6M','YTD','1Y', '3Y', '5Y'], names_pd, flow_currency, is_num=False)
+    
+    return flow_pivot, flow_names
 
-        
-def submit_user_portfolio(records, conn):
-    cur = conn.cursor()
-    update = """ INSERT INTO users("UserName", "Email", "Portfolio","Frequency","Holdings")
-                VALUES(%s, %s, %s, %s, %s)
-                ON CONFLICT DO NOTHING 
-            """
-    cur.execute(update, records)
 
-    conn.commit()
-    cur.close()
+def get_dividend(isin, conn):
+    div = pd.read_sql(api.get_by_isin(isin, 'calc_div_yield', ["TimeStamp", "Currency", "Dividend", "Yield"]), con=conn)
+    div['TimeStamp'] = pd.to_datetime(div['TimeStamp'], utc=True)
+    div['Dates'] = div['TimeStamp'].dt.strftime('%Y-%m-%d')
+    div['Yield'] = div['Yield'] / 100
+    div['Dividend'] = div['Dividend'].apply(lambda x: round(x,2))
 
-    return 
+    return div
+
+def get_div_latest(isins, names_pd, conn):
+    div = pd.read_sql(api.get_by_isin(isins, 'latest_div', ["ISINCode", "exDivDate", "Currency", "Dividend", "Yield", "DivGrowth", "DivGrowthPct"]), con=conn)
+    div = div.merge(names_pd, how='left', on='ISINCode')
+    div['exDivDate'] = pd.to_datetime(div['exDivDate']).dt.strftime('%Y-%m-%d')
+    div['Currency'] = div['Currency'].apply(lambda x: currency_format(x))
+    div['Dividend'] = div[['Currency', 'Dividend']].apply(lambda x: num_format(x[1], x[0]), axis=1)
+    div['DivGrowth'] = div[['Currency', 'DivGrowth']].apply(lambda x: num_format(x[1], x[0]), axis=1)
+    div['Yield'] = div['Yield'].apply(lambda x: '{:.1%}'.format(x/100))
+    div['DivGrowthPct'] = div['DivGrowthPct'] / 100
+    div['DivGrowth'] = div[['DivGrowth', 'DivGrowthPct']].apply(lambda x: x[0] + ' ({:.1%})'.format(x[1]), axis=1)
+    div = div[['FundName', 'exDivDate', 'Dividend', 'Yield', 'DivGrowth']]
+    div = div.rename(columns = {'exDivDate': 'Ex-Dividend Date', 'Yield': 'Yield (%)', 'DivGrowth': 'Dividend Growth'})
+
+
+    return div.to_dict(orient='records')
+
+
+def get_similar_etfs_detail(isins, conn):
+    similar_etfs = pd.read_sql(api.get_similar_etfs_details(isins), con=conn)
+
+    similar_etfs['Currency'] = similar_etfs['Currency'].apply(lambda x: currency_format(x))
+    similar_etfs['AUM'] = similar_etfs[['Currency', 'AUM']].apply(lambda x: num_format(x[1], x[0]), axis=1)
+    similar_etfs['Return'] = similar_etfs['Return']/100
+    similar_etfs['TotalExpenseRatio'] = similar_etfs['TotalExpenseRatio'].apply(lambda x: str(round(x,2)))
+
+    similar_etfs = similar_etfs[['FundName', 'DistributionIndicator', 'TotalExpenseRatio', 'AUM', 'Return']]
+    similar_etfs = similar_etfs.rename(columns = {'FundName': 'Name', 'DistributionIndicator': 'Distribution', 'TotalExpenseRatio': 'Cost (%)', 'Return': 'YTD (%)' })
+    col_names = similar_etfs.columns
+
+    return similar_etfs.to_dict(orient='records'), col_names
+
+
+
+
+
+
+
+
+
+
 
 

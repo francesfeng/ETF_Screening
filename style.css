@@ -84,3 +84,23 @@ h5 {
 .css-5dd3ww {
     font-family: sans-serif;
 }
+
+/*.css-a58qmi-EmotionIconBase{
+    display: none;    
+}*/
+
+.css-1xarl3l {
+    font-size: 1.5rem;  /*matrix font size */
+}
+
+
+.vega-embed.has-actions {
+    padding-right: 2px;
+    padding-left: 0px;
+}
+
+.table_header{
+    display: flex;
+    align-items: center;
+    /*justify-content: center */
+}
