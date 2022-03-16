@@ -10,6 +10,7 @@ from src import api
 
 @st.cache(allow_output_mutation=True, hash_funcs={"_thread.RLock": lambda _: None, 'builtins.weakref': lambda _: None})
 def init_connection():
+    st.write(st.secrets["gcp"])
     return psycopg2.connect(**st.secrets["gcp"])
 
 
