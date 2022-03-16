@@ -11,7 +11,6 @@ import sqlalchemy
 
 @st.cache(allow_output_mutation=True, hash_funcs={"_thread.RLock": lambda _: None, 'builtins.weakref': lambda _: None})
 def init_connection():
-    st.write(st.secrets["do"])
     return psycopg2.connect(**st.secrets["do"])
 
 
