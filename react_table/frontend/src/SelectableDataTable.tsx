@@ -668,7 +668,7 @@ const SelectableDataTable: React.FC<ComponentProps> = props => {
   }
     
   return (
-     <div style={{ height: 700}}>
+     <div style={{ height: 700, width: 2000 }}>
      <DataGrid
         rows={rows}
         columns={columns}
