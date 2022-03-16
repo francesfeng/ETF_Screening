@@ -6,12 +6,14 @@ import numpy as np
 import copy
 import datetime
 from src import api
+from google.cloud.sql.connector import connector
+import sqlalchemy
 
 
 @st.cache(allow_output_mutation=True, hash_funcs={"_thread.RLock": lambda _: None, 'builtins.weakref': lambda _: None})
 def init_connection():
-    st.write(st.secrets["gcp"])
-    return psycopg2.connect(**st.secrets["gcp"])
+    st.write(st.secrets["do"])
+    return psycopg2.connect(**st.secrets["do"])
 
 
 @st.cache(ttl=600,allow_output_mutation=True, hash_funcs={psycopg2.extensions.connection: lambda _: None})
