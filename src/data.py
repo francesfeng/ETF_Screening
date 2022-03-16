@@ -6,7 +6,6 @@ import numpy as np
 import copy
 import datetime
 from src import api
-from google.cloud.sql.connector import connector
 import sqlalchemy
 
 
