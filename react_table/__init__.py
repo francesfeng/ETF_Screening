@@ -9,9 +9,9 @@ build_dir = os.path.join(parent_dir, "frontend/build")
 
 _selectable_data_table = components.declare_component(
 
-    "selectable_data_table", url="http://localhost:3001",
+    #"selectable_data_table", url="http://localhost:3001",
 
-    #"selectable_data_table", path=build_dir,
+    "selectable_data_table", path=build_dir,
 )
 
 

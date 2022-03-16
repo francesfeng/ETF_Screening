@@ -95,17 +95,23 @@ def draw_radar_graph(data1, data2, categories, legend1, legend2):
 def draw_grouped_bar_vertical(data, x_name, y_name, row_name, dom , sort_order):
 	tooltips = [y_name, row_name, alt.Tooltip(x_name, format = '.2~s')]
 
-	bars = alt.Chart(data).mark_bar().encode(
-				x = alt.X(x_name +':Q', axis = alt.Axis(format='~s')),
-				y = alt.Y(y_name,title=None),
-				color = alt.Color(y_name, scale=alt.Scale(domain=dom)),
-				row = alt.Row(row_name+':N', sort=sort_order, title=None, spacing=5),
-				tooltip = tooltips
-			).configure_header(
-				labelOrient = "right"
+	base = alt.Chart(data).mark_bar().encode(
+				color = alt.Color(y_name, scale=alt.Scale(domain=dom)),		
+			)
+
+	bars = base.encode(
+			x = alt.X(x_name +':Q', axis = alt.Axis(format='~s')),
+			y = alt.Y(y_name,title=None),
+			row = alt.Row(row_name+':N', sort=sort_order, title=None, spacing=5),
+			tooltip = tooltips
+		).configure_header(
+			labelOrient = "right"
 			).configure_axisY(
 			disable=True
 			)
+	legend = base.encode(
+		color = alt.Color(y_name, scale=alt.Scale(domain=dom)),
+		).properties(height=35, width=150)
 
 	return bars
 
@@ -118,7 +124,7 @@ def draw_top_holding_graph(data):
 				y = alt.Y('combined:N', sort='-x')			
 			).properties(
 				width = 400,
-				height = alt.Step(40)
+				height = alt.Step(35)
 				)
 	bars = base.mark_bar(color='#123FED').encode(
 		tooltip = ['Name', 'Country', alt.Tooltip('Weight', format = '.2%')]
@@ -153,9 +159,10 @@ def draw_holding_type(data, y_col, title, y_label_width=120):
 @st.cache(allow_output_mutation=True)
 def performance_graph(data, y_col, dom, names_seq, num_format, color_col = 'Type'):
 	main_palette, _ = color_palette()
-	names_seq['Color'] = main_palette[:len(names_seq)]
+	names = list(names_seq['Name'])
+	names_dic = {names[i]: main_palette[i] for i in range(len(names))}
 
-	names_color = names_seq.loc[names_seq['FundName'].isin(dom), 'Color'].to_list()
+	dom_dolor = [names_dic[i] for i in dom]
 
 	nearest = alt.selection(type='single', nearest=True, on='mouseover',
 			fields=['Dates'], empty='none')
@@ -163,7 +170,7 @@ def performance_graph(data, y_col, dom, names_seq, num_format, color_col = 'Type
 	base = alt.Chart(data).mark_line().encode(
 			x=alt.X('Dates:T', title=None ,axis=alt.Axis(format = ("%d-%b-%Y"))),
 			y = alt.Y(y_col + ':Q', title=None, axis=alt.Axis(format= num_format), scale=alt.Scale(zero=False)),
-			color=alt.Color( color_col + ':N', scale=alt.Scale(range= names_color, domain=dom))
+			color=alt.Color( color_col + ':N', scale=alt.Scale(range= dom_dolor, domain=dom))
 		)
 
 
@@ -197,7 +204,7 @@ def performance_graph(data, y_col, dom, names_seq, num_format, color_col = 'Type
 @st.cache(allow_output_mutation=True)
 def performance_grouped_bar_graph(data, x_col ,y_col, title, dom , min_max, y_label_show = True, x_label_show=False):
 	bars = alt.Chart(data).mark_bar().encode(
-					x = alt.X(x_col + ':N', title = None, sort="descending", axis=alt.Axis(labels=x_label_show, tickSize=0)),
+					x = alt.X(x_col + ':N', title = None, sort=dom, axis=alt.Axis(labels=x_label_show, tickSize=0)),
 					y = alt.Y(y_col + ':Q', title = None, axis=alt.Axis(format='%', labels=y_label_show), scale=alt.Scale(domain=min_max)),
 					color = alt.Color(x_col + ':N',scale=alt.Scale(domain=dom), legend=None),
 					tooltip = alt.Tooltip(y_col + ':Q', format=".2%")
@@ -249,7 +256,7 @@ def draw_full_holding_graph(data):
 def fundflow_graph(data, names_pd):
 	dates = data.index 
 	fig = go.Figure()
-	funds = pd.DataFrame(names_pd['FundName'], index=names_pd['ISINCode'], columns=['FundName'])
+	funds = pd.DataFrame(names_pd['Name'], index=names_pd['ISINCode'], columns=['Name'])
 	colors, _ = color_palette()
 	colors_pd = pd.DataFrame(colors[:len(names_pd)], index=names_pd['ISINCode'],columns=['Color'])
 
@@ -286,11 +293,11 @@ def dividend_graph(data):
 		)
 
 	lines = base.mark_line(color='#304FFE').encode(
-			y = alt.Y('Yield:Q', title='Dividend Yield', axis=alt.Axis(format= '.1%')),
+			y = alt.Y('Yield:Q', title='Dividend Yield', axis=alt.Axis(format= '.1%'), scale=alt.Scale(zero=False)),
 		)
 
 	dots = base.mark_circle(size=50, color='#48cae4').encode(
-			y = alt.Y('Dividend', title='Dividend', axis=alt.Axis(format= '.1f', labelAlign='left'))
+			y = alt.Y('Dividend', title='Dividend', axis=alt.Axis(format= '.1f', labelAlign='left'), scale=alt.Scale(zero=False))
 		)
 
 	rules = base.mark_rule().transform_calculate(

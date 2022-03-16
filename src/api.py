@@ -1,21 +1,24 @@
 def init_equity():
 	query = """
-		SELECT "ISINCode", "Country", "EquitySize", "EquitySector", "IsESG", "EquityFactorDes", "EquityStrategyDes" 
+		SELECT "ISINCode", "Country", "EquitySize", "EquitySector", "ESG", "EquityFactorDes", "EquityStrategyDes",
+		"DistributionIndicator", "ETPIssuerName", "FundCurrency", "Cost", "IndexProvider"
 		FROM gcp_class WHERE "AssetClass" = 'Equity' 
 	 """
 	return query 
 
 def init_fi():
 	query = """
-		SELECT "ISINCode", "Country", "FixedIncomeType", "FixedIncomeRatingGroup", "IsESG", "FixedIncomeMaturityGroup", 
-		"FixedIncomeDominateCurrencyGroup", "FixedIncomeFactorDes", "FixedIncomeStrategyDes" 
+		SELECT "ISINCode", "Country", "FixedIncomeType", "FixedIncomeRatingGroup", "ESG", "FixedIncomeMaturityGroup", 
+		"FixedIncomeDominateCurrencyGroup", "FixedIncomeFactorDes", "FixedIncomeStrategyDes",
+		"DistributionIndicator", "ETPIssuerName", "FundCurrency", "Cost", "IndexProvider"
 		FROM gcp_class WHERE "AssetClass" = 'Fixed Income' 
 		"""
 	return query
 
 def init_commodity():
 	query = """
-		SELECT "ISINCode", "CommodityUnderlying", "CommoditySpotForward", "CommodityStrategyDes"
+		SELECT "ISINCode", "CommodityUnderlying", "CommoditySpotForward", "CommodityStrategyDes",
+		"DistributionIndicator", "ETPIssuerName", "FundCurrency", "Cost", "IndexProvider"
 		FROM gcp_class WHERE "AssetClass" = 'Commodity' 
 		"""
 	return query 
@@ -23,31 +26,71 @@ def init_commodity():
 
 def init_currency():
 	query = """
-		SELECT "ISINCode", "CurrencyBucket1"
+		SELECT "ISINCode", "CurrencyBucket1",
+		"DistributionIndicator", "ETPIssuerName", "FundCurrency", "Cost", "IndexProvider"
 		FROM gcp_class WHERE "AssetClass" = 'Currency' 
 		"""
 	return query
 
 def init_structured():
 	query = """
-		SELECT "ISINCode", "StructuredMultiple", "StructuredTracking"
+		SELECT "ISINCode", "StructuredMultiple", "StructuredTracking",
+		"DistributionIndicator", "ETPIssuerName", "FundCurrency", "Cost", "IndexProvider"
 		FROM gcp_class WHERE "AssetClass" = 'Structured' 
 		"""
 	return query
 
 def init_alt():
 	query = """
-		SELECT "ISINCode", "SubAssetClass"
+		SELECT "ISINCode", "SubAssetClass",
+		"DistributionIndicator", "ETPIssuerName", "FundCurrency", "Cost", "IndexProvider"
 		FROM gcp_class WHERE "AssetClass" = 'Alternative & Multi-Assets' 
 		"""
 	return query
 
 def init_thematic():
 	query = """
-		SELECT "ISINCode", "EquitySubSector"
+		SELECT "ISINCode", "EquitySubSector",
+		"DistributionIndicator", "ETPIssuerName", "FundCurrency", "Cost", "IndexProvider"
 		FROM gcp_class WHERE "AssetClass" = 'Equity' AND "EquityIsThematic" =True
 		"""
 	return query 
+
+def initialise(asset_class, exchange):
+	if asset_class == 'Equity':
+		query = init_equity()
+	elif asset_class == 'Fixed Income':
+		query = init_fi()
+	elif asset_class == 'Commodity':
+		query = init_commodity()
+	elif asset_class == 'Currency':
+		query = api.init_currency()
+	elif asset_class == 'Structured':
+		query = api.init_structured()
+	elif asset_class == 'Alternative & Multi-Assets':
+		query = api.init_alt()
+	elif asset_class == 'Thematic':
+		query = init_thematic()
+	else:
+		return
+
+	query += """ AND "Exchange" = '"""+ exchange +"""' """
+	return query
+
+
+def get_exchanges():
+	query = """ SELECT "Flag", "Country", "Exchange" FROM (
+			(SELECT DISTINCT("Exchange"), COUNT("Ticker") FROM tickers GROUP BY 1) AS exchanges
+			LEFT JOIN country_list
+			USING("Exchange")
+			) exchange_map ORDER BY count DESC"""
+	return query
+
+def get_etfs_list(exchange=None):
+	query = """ SELECT "ISINCode", "ExchangeTicker", "FundName" FROM gcp_funds """
+	if exchange is not None:
+		query += """ WHERE "Exchange" = '""" + exchange + """' """
+	return query
 
 
 def get_by_isin(isins, table_name, col_names = None, limit = None):
@@ -63,11 +106,45 @@ def get_by_isin(isins, table_name, col_names = None, limit = None):
 
 	return query
 
+def get_by_ticker(tickers, table_name, col_names = None):
+	ticker_lst = '\', \''.join(tickers)
+	if col_names is not None:
+		cols = '\", \"'.join(col_names)
+		query = """ SELECT \"""" + cols + """\" FROM """ +table_name+ """ WHERE "ExchangeTicker" IN ('""" + ticker_lst + """')"""
+	else:
+		query = """ SELECT * FROM """ +table_name+ """ WHERE "Ticker" IN ('""" + ticker_lst + """')"""
+
+	return query
+
+def search(txt_lst):
+	search_arr = ['\'%' + i + '%\'' for i in txt_lst]
+
+	query = """ SELECT "ISINCode" FROM 
+		(SELECT "ISINCode", LOWER("FundName") AS "Name" FROM gcp_funds) AS names
+		WHERE "Name" LIKE any(array[ """ + ', '.join(search_arr) + """ ])"""
+
+	return query
+
 
 def get_fundflows(isins):
 	query = get_by_isin(isins, 'calc_fundflow_period', ["ISINCode", "Description", "Currency", "flow_local", "flow_USD", "flow_EUR", "flow_GBP"])
 	query = """SELECT * FROM ( ("""+ query + """ ) AS flows LEFT JOIN (SELECT "ISINCode", "AUM", "AUM_USD", "AUM_EUR", "AUM_GBP" FROM latest_nav_shares) AS aums USING("ISINCode") ) AS flow_map"""
 	return query
+
+
+def get_div(isins):
+	query_funds = get_by_isin(isins, 'funds', ["ISINCode", "DistributionIndicator", "CashFlowFrequency"])
+	query_div = get_by_isin(isins, 'latest_div')
+
+	query = """ SELECT "ISINCode","DistributionIndicator", "CashFlowFrequency",
+				"exDivDate", "Currency", "Dividend", "Yield", "DivGrowth", "DivGrowthPct"
+				 FROM ( ( """ + query_funds + """) AS funds
+			LEFT JOIN latest_div
+			USING("ISINCode")
+			) AS div_map
+			"""
+	return query
+
 
 
 def get_similar_etfs(isin):
@@ -109,10 +186,10 @@ def get_navs_weekly(isins):
 	query += """ AND "IsWeek" = TRUE ORDER BY "ISINCode" ,"TimeStamp" ASC """
 	return query 
 
-def get_1m_perf(isins):
+def get_1y_perf(isins):
 	query = get_by_isin(isins, 'calc_return_period', ["ISINCode", "Return"])
 	query = """ SELECT * FROM (
-				(""" + query + """ AND "Description" = '1M') AS perf
+				(""" + query + """ AND "Description" = '1Y' AND "Type"='Cumulative') AS perf
 				LEFT JOIN (SELECT "ISINCode", "FundName" FROM funds) AS funds
 				USING("ISINCode")
 			) AS perf_map """
@@ -178,9 +255,27 @@ def get_listings(isin):
 	return query
 
 
-def get_tr(isins, start_date):
+def get_tr(isins, start_date = None, end_date=None):
 	query = get_by_isin(isins, 'total_return', ["ISINCode", "TimeStamp", "TotalReturn"])
-	query += """ AND "ISINCode" >= '""" +  start_date + """' """
+
+	if start_date is not None:
+		query += """ AND "TimeStamp" >= '""" +  str(start_date) + """' """
+
+	if end_date is not None:
+		query += """ AND "TimeStamp" <= '""" +  str(end_date) + """' """
+
+	return query
+
+def get_nav(isins, start_date=None, end_date=None):
+	query = get_by_isin(isins, 'nav_shares_map', ["ISINCode", "TimeStamp", "NAV"])
+
+	if start_date is not None:
+		query += """ AND "TimeStamp" >= '""" +  str(start_date) + """' """
+	
+	if end_date is not None:
+		query += """ AND "TimeStamp" <= '""" +  str(end_date) + """' """
+
+	query += """ ORDER BY "ISINCode", "TimeStamp" ASC """
 	return query
 
 
@@ -197,13 +292,15 @@ def get_drawdown_period(isins):
 	return query
 
 def get_holding_all(isin):
-	query_max = get_by_isin(isin, 'calc_holding_all', ["TimeStamp"])
-	query_max = """SELECT MAX("TimeStamp") FROM ( """ + query_max + """ ) AS max_date """
 
-	query = get_by_isin(isin, 'calc_holding_all', ["InstrumentDescription", "Country", "Sector", "Weight"])
-	query += """ AND "TimeStamp" = (""" + query_max + """)"""
+	query = get_by_isin(isin, 'calc_holding_all', ["ISINCode","TimeStamp","InstrumentDescription", "Country", "Sector", "Weight"])
+	query = """ 
+			SELECT * FROM (
+				SELECT *, LAST_VALUE("TimeStamp") OVER(PARTITION BY "ISINCode" RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) "Latest" FROM (""" \
+				+query + """) AS holding 
+			) holding_latest WHERE "TimeStamp" = "Latest" """
 
-	query = """ SELECT "InstrumentDescription", "Country" ,"Flag", "Sector", "Weight" FROM (
+	query = """ SELECT "ISINCode","InstrumentDescription", "Country" ,"Flag", "Sector", "Weight" FROM (
 					( """ + query + """) AS holding 
 					LEFT JOIN country_list
 					USING("Country")
@@ -212,13 +309,16 @@ def get_holding_all(isin):
 	return query
 
 def get_holding_type(isin):
-	query_max = get_by_isin(isin, 'calc_holding_type', ["TimeStamp"])
-	query_max = """SELECT MAX("TimeStamp") FROM ( """ + query_max + """ ) AS max_date """
 
-	query = get_by_isin(isin, 'calc_holding_type', [ "HoldingType", "HoldingName", "Weight"])
-	query += """ AND "Rank"<=10 AND "TimeStamp" = (""" + query_max + """)"""
+	query = get_by_isin(isin, 'calc_holding_type', ["ISINCode", "TimeStamp","HoldingType", "HoldingName", "Weight"])
+	query = """ 
+			SELECT * FROM (
+				SELECT *, LAST_VALUE("TimeStamp") OVER(PARTITION BY "ISINCode" RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) "Latest" FROM ("""\
+				+query + """ AND "Rank"<=10) AS holding 
+			) holding_latest WHERE "TimeStamp" = "Latest" """
 
-	query = """ SELECT "HoldingType", "HoldingName", "Weight", "Flag" FROM (
+
+	query = """ SELECT "ISINCode","HoldingType", "HoldingName", "Weight", "Flag" FROM (
 				( """ + query + """ ) AS holding
 				LEFT JOIN country_list
 				ON holding."HoldingName" = country_list."Country"
@@ -245,10 +345,53 @@ def get_similar_etfs_details(isins):
 	return query
 
 
+def get_unique_fund_list():
+	query = """SELECT "ISINCode", "FundName", ("Flag"||' '||"ExchangeTicker") AS "Tickers", "ClassLevel1" AS "Sector",  "Exchange" FROM (
+	(SELECT "ISINCode", "FundName" FROM funds) AS funds
+	LEFT JOIN 
+	(SELECT "ISINCode", "Exchange", "ExchangeTicker" FROM tickers) AS tickers
+	USING("ISINCode")
+	LEFT JOIN (SELECT "Exchange", "Flag" FROM country_list) AS flags
+	USING("Exchange")
+	LEFT JOIN(SELECT "ISINCode", "AUM_USD" FROM latest_nav_shares) as aums
+	USING("ISINCode")
+	LEFT JOIN(SELECT "ISINCode", "ClassLevel1" FROM class_copy) as classification
+	USING("ISINCode")
+	) all_map ORDER BY "AUM_USD" DESC NULLS LAST """
+
+	return query
+
+def get_equity_indices_names():
+	return """SELECT "Ticker", "Flag", "Name" FROM (
+			(SELECT *, ROW_NUMBER() OVER() AS row_order FROM "equity_indices_list" ) as indices
+			LEFT JOIN (SELECT "Country", "Flag" FROM "country_list") AS countries
+			USING("Country")
+		) flag_map ORDER BY row_order"""
+
+def get_equity_indices(tickers, start_date = None, end_date=None):
+	ticker_lst = '\', \''.join(tickers)
+	query = """ SELECT * FROM "equity_indices" WHERE "Ticker" IN ('""" + ticker_lst + """')"""
+	if start_date is not None:
+		query += """ AND "Timestamp" >= ' """ + str(start_date) + """' """
+
+	if end_date is not None:
+		query += """ AND "Timestamp" <= ' """ + str(end_date) + """' """
+
+	return query
 
 
+def get_fundflow(isins, currency_col ,start_date = None, end_date=None):
+	query = get_by_isin(isins, 'calc_fundflow_monthly', ['ISINCode', 'TimeStamp', currency_col])
 
+	if start_date is not None:
+		query += """ AND "TimeStamp" >= '""" +  str(start_date) + """' """
+	
+	if end_date is not None:
+		query += """ AND "TimeStamp" <= '""" +  str(end_date) + """' """
 
+	query += """ ORDER BY "ISINCode", "TimeStamp" ASC """
+
+	return query
 
 
 

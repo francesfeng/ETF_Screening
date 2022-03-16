@@ -107,6 +107,8 @@ Equity,EquityStrategyDes,Strategy,Revenue Abroad,18
 Equity,EquityStrategyDes,Strategy,Buyback Yields,13
 Equity,EquityStrategyDes,Strategy,Absolute Returns,6
 Equity,EquityStrategyDes,Strategy,GDP Weighted,1
+Equity,ESG,ESG,Yes,
+Equity,ESG,ESG,No,
 Fixed Income,Country,Region,Global Developed,147
 Fixed Income,Country,Region,EuroZone,143
 Fixed Income,Country,Region,Global Broad,135
@@ -163,8 +165,8 @@ Fixed Income,FixedIncomeDominateCurrencyGroup,Bond Currency,SEK,1
 Fixed Income,FixedIncomeDominateCurrencyGroup,Bond Currency,Hard Currency,66
 Fixed Income,FixedIncomeDominateCurrencyGroup,Bond Currency,EM Local Currency,18
 Fixed Income,FixedIncomeDominateCurrencyGroup,Bond Currency,Multi-Currency,56
-Fixed Income,FixedIncomeFactorDes,Factor,Enhanced Yield ,16
-Fixed Income,FixedIncomeFactorDes,Factor,Quality ,12
+Fixed Income,FixedIncomeFactorDes,Factor,Enhanced Yield,16
+Fixed Income,FixedIncomeFactorDes,Factor,Quality,12
 Fixed Income,FixedIncomeFactorDes,Factor,Multi-Factor,4
 Fixed Income,FixedIncomeStrategyDes,Strategy,Inflation Breakeven,6
 Fixed Income,FixedIncomeStrategyDes,Strategy,Risk weighted,5
@@ -178,6 +180,8 @@ Fixed Income,FixedIncomeStrategyDes,Strategy,Delta Hedge,2
 Fixed Income,FixedIncomeStrategyDes,Strategy,Equal Weighted,2
 Fixed Income,FixedIncomeStrategyDes,Strategy,Fundamental Weighted,2
 Fixed Income,FixedIncomeStrategyDes,Strategy,GDP Weighted,2
+Fixed Income,ESG,ESG,Yes,
+Fixed Income,ESG,ESG,No,
 Commodity,CommodityUnderlying,Broad,Broad Basket,55
 Commodity,CommodityUnderlying,Broad,Industrial Metals,16
 Commodity,CommodityUnderlying,Broad,ex-Agriculture & Livestock,13
@@ -288,7 +292,7 @@ Structured,StructuredTracking,Currency,Long CAD,2
 Structured,StructuredTracking,Currency,Long CHF,3
 Structured,StructuredTracking,Currency,Long EUR,8
 Structured,StructuredTracking,Currency,Long GBP,5
-Structured,StructuredTracking,Currency,Long GBP ,1
+Structured,StructuredTracking,Currency,Long GBP,1
 Structured,StructuredTracking,Currency,Long JPY,7
 Structured,StructuredTracking,Currency,Long USD,9
 Structured,StructuredTracking,Currency,Short AUD,5
@@ -403,3 +407,142 @@ Currency,CurrencyBucket1,Pair,CNY,4
 Currency,CurrencyBucket1,Pair,EUR,4
 Currency,CurrencyBucket1,Pair,GBP,4
 Currency,CurrencyBucket1,Pair,INR,4
+Common,DistributionIndicator,Dividend Treatment,Accumulating,2542
+Common,DistributionIndicator,Dividend Treatment,Distributing,1180
+Common,ETPIssuerName,Issuer,WisdomTree,630
+Common,ETPIssuerName,Issuer,Lyxor,437
+Common,ETPIssuerName,Issuer,iShares,431
+Common,ETPIssuerName,Issuer,UBS,363
+Common,ETPIssuerName,Issuer,Xtrackers,265
+Common,ETPIssuerName,Issuer,Amundi,229
+Common,ETPIssuerName,Issuer,Invesco,169
+Common,ETPIssuerName,Issuer,Commerzbank,149
+Common,ETPIssuerName,Issuer,BNP Paribas,134
+Common,ETPIssuerName,Issuer,Societe Generale,126
+Common,ETPIssuerName,Issuer,SPDR,113
+Common,ETPIssuerName,Issuer,iSharees,76
+Common,ETPIssuerName,Issuer,HSBC,54
+Common,ETPIssuerName,Issuer,L&G,53
+Common,ETPIssuerName,Issuer,Vanguard,51
+Common,ETPIssuerName,Issuer,Deka,47
+Common,ETPIssuerName,Issuer,Swisscanto,46
+Common,ETPIssuerName,Issuer,JPMorgan,41
+Common,ETPIssuerName,Issuer,Ossiam,30
+Common,ETPIssuerName,Issuer,First Trust,27
+Common,ETPIssuerName,Issuer,Leverage Shares,25
+Common,ETPIssuerName,Issuer,VanEck,23
+Common,ETPIssuerName,Issuer,Graniteshares,22
+Common,ETPIssuerName,Issuer,PIMCO,19
+Common,ETPIssuerName,Issuer,Fidelity,15
+Common,ETPIssuerName,Issuer,XACT,15
+Common,ETPIssuerName,Issuer,Franklin Templeton,14
+Common,ETPIssuerName,Issuer,BMO,13
+Common,ETPIssuerName,Issuer,21Shares,11
+Common,ETPIssuerName,Issuer,Expat,11
+Common,ETPIssuerName,Issuer,HANetf,11
+Common,ETPIssuerName,Issuer,Market Access,8
+Common,ETPIssuerName,Issuer,Tabula,8
+Common,ETPIssuerName,Issuer,FundLogic,7
+Common,ETPIssuerName,Issuer,Structured Invest,6
+Common,ETPIssuerName,Issuer,Credit Suisse Index Funds,5
+Common,ETPIssuerName,Issuer,FinEx,5
+Common,ETPIssuerName,Issuer,IndexIQ,5
+Common,ETPIssuerName,Issuer,Raiffeisen,5
+Common,ETPIssuerName,Issuer,Nomura,4
+Common,ETPIssuerName,Issuer,Goldman Sachs,3
+Common,ETPIssuerName,Issuer,KraneShares,3
+Common,ETPIssuerName,Issuer,SpotR,3
+Common,ETPIssuerName,Issuer,Accion,2
+Common,ETPIssuerName,Issuer,EMQQ,2
+Common,ETPIssuerName,Issuer,ITI Funds,2
+Common,ETPIssuerName,Issuer,Nordea,2
+Common,ETPIssuerName,Issuer,Rize ETF,2
+Common,ETPIssuerName,Issuer,DNB,1
+Common,ETPIssuerName,Issuer,Deutsche Boerse,1
+Common,ETPIssuerName,Issuer,ETFS Commodity Securities Ltd,1
+Common,ETPIssuerName,Issuer,FundLogic ,1
+Common,ETPIssuerName,Issuer,FundRock,1
+Common,ETPIssuerName,Issuer,Landsbref,1
+Common,ETPIssuerName,Issuer,Seligson & Co,1
+Common,ETPIssuerName,Issuer,Vaneck,1
+Common,FundCurrency,Fund Currency,EUR,1676
+Common,FundCurrency,Fund Currency,USD,1470
+Common,FundCurrency,Fund Currency,GBP,339
+Common,FundCurrency,Fund Currency,CHF,162
+Common,FundCurrency,Fund Currency,JPY,33
+Common,FundCurrency,Fund Currency,SEK,15
+Common,FundCurrency,Fund Currency,SGD,6
+Common,FundCurrency,Fund Currency,AUD,4
+Common,FundCurrency,Fund Currency,GBX,4
+Common,FundCurrency,Fund Currency,HKD,4
+Common,FundCurrency,Fund Currency,NOK,4
+Common,FundCurrency,Fund Currency,CAD,3
+Common,FundCurrency,Fund Currency,CNH,2
+Common,FundCurrency,Fund Currency,CNY,2
+Common,FundCurrency,Fund Currency,MXN,2
+Common,FundCurrency,Fund Currency,BGN,1
+Common,FundCurrency,Fund Currency,DKK,1
+Common,FundCurrency,Fund Currency,ISK,1
+Common,FundCurrency,Fund Currency,PLN,1
+Common,Cost,Cost,0.1% and below,
+Common,Cost,Cost,0.1 - 0.3%,
+Common,Cost,Cost,0.3 - 0.5%,
+Common,Cost,Cost,0.5 - 1.0%,
+Common,Cost,Cost,1.0% and above,
+Common,IndexProvider,Index Provider,MSCI,2250
+Common,IndexProvider,Index Provider,Bloomberg Indices,1154
+Common,IndexProvider,Index Provider,Deutsche Borse Qontigo,661
+Common,IndexProvider,Index Provider,FTSE Russell,620
+Common,IndexProvider,Index Provider,S&P Dow Jones Indices,536
+Common,IndexProvider,Index Provider,IHS Markit,368
+Common,IndexProvider,Index Provider,Solactive,263
+Common,IndexProvider,Index Provider,ICE Data Services,192
+Common,IndexProvider,Index Provider,Nasdaq,181
+Common,IndexProvider,Index Provider,LBMA,142
+Common,IndexProvider,Index Provider,WisdomTree,142
+Common,IndexProvider,Index Provider,J.P. Morgan,135
+Common,IndexProvider,Index Provider,Morgan Stanley,104
+Common,IndexProvider,Index Provider,BNP Paribas Indices,84
+Common,IndexProvider,Index Provider,Nikkei,64
+Common,IndexProvider,Index Provider,-,54
+Common,IndexProvider,Index Provider,Morningstar,50
+Common,IndexProvider,Index Provider,Euronext,45
+Common,IndexProvider,Index Provider,Societe Generale Index,44
+Common,IndexProvider,Index Provider,Japan Exchange Group,35
+Common,IndexProvider,Index Provider,Refinitiv,33
+Common,IndexProvider,Index Provider,SIX Swiss Exchange,33
+Common,IndexProvider,Index Provider,Fidelity,30
+Common,IndexProvider,Index Provider,Deutsche Bank Index Quant (DBIQ),27
+Common,IndexProvider,Index Provider,Commerzbank AG,23
+Common,IndexProvider,Index Provider,Goldman Sachs,23
+Common,IndexProvider,Index Provider,ERI Scientific Beta,22
+Common,IndexProvider,Index Provider,Ossiam,22
+Common,IndexProvider,Index Provider,Hang Seng Indexes,19
+Common,IndexProvider,Index Provider,Barclays Indices,18
+Common,IndexProvider,Index Provider,China Securities Index,15
+Common,IndexProvider,Index Provider,ICE,14
+Common,IndexProvider,Index Provider,Robo Global,14
+Common,IndexProvider,Index Provider,Foxberry,11
+Common,IndexProvider,Index Provider,Wells Fargo,10
+Common,IndexProvider,Index Provider,Lombard Odier,7
+Common,IndexProvider,Index Provider,Wiener Borse AG,7
+Common,IndexProvider,Index Provider,Global Property Research,6
+Common,IndexProvider,Index Provider,LPX AG,6
+Common,IndexProvider,Index Provider,Beeland Interests,5
+Common,IndexProvider,Index Provider,Bolsas y Mercados Espaoles,5
+Common,IndexProvider,Index Provider,CBOE,5
+Common,IndexProvider,Index Provider,EMQQ,5
+Common,IndexProvider,Index Provider,Hedge Fund Research (HFR),5
+Common,IndexProvider,Index Provider,MV Index Solutions,5
+Common,IndexProvider,Index Provider,NSE Indices,5
+Common,IndexProvider,Index Provider,S-Network,5
+Common,IndexProvider,Index Provider,Tel-Aviv Stock Exchange,4
+Common,IndexProvider,Index Provider,ECPI,3
+Common,IndexProvider,Index Provider,Indxx Indices,3
+Common,IndexProvider,Index Provider,Indxx Indices ,3
+Common,IndexProvider,Index Provider,Svenska Handelsbanken AB,3
+Common,IndexProvider,Index Provider,IPOX,2
+Common,IndexProvider,Index Provider,GPW Benchmark S.A.,1
+Common,IndexProvider,Index Provider,MTS Group,1
+Common,IndexProvider,Index Provider,Moscow Exchange,1
+Common,IndexProvider,Index Provider,"Value Line, Inc.",1

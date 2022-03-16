@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { DataGrid, GridColDef,GridValueGetterParams, GridSelectionModel, GridCellParams, GridValueFormatterParams, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarFilterButton, GridToolbarDensitySelector} from '@mui/x-data-grid';
 
 import {ComponentProps, Streamlit, withStreamlitConnection} from "streamlit-component-lib"
+import Link from '@mui/material/Link'
 
 function number_formatter(num) {
   if (Math.abs(num) > 999999999 ) {
@@ -36,9 +37,6 @@ function currency_formatter(num, currency) {
   return value
 }
 
-function currency_converter(currency) {
-  return currency === 'USD' ? '$' : currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : currency ==='JPY'? '¥' : currency === 'GBX' ? 'GBp ' : currency + ' '
-}
 
 function currency_reverse(curr) {
   let originalCurrency
@@ -93,6 +91,14 @@ const number_color_formatter = (params: GridCellParams<number>) =>
         clsx('super-app', {
           negative: params.value < 0,
           positive: params.value > 0,
+        })
+
+const str_color_formatter = (params: GridCellParams<number>) =>
+        clsx('super-app', {
+          // negative: params.value < 0,
+          // positive: params.value > 0,
+          negative: String(params.value).substring(0,1) === '-',
+          positive: String(params.value).substring(0,1) !== '0',
         })
 
 
@@ -157,13 +163,19 @@ const SelectableDataTable: React.FC<ComponentProps> = props => {
       field: 'ExchangeTicker',
       headerName: 'Ticker',
       width: 100,
-      hideable: false
+      hideable: false,
+      renderCell: (params) => {
+        return (<Link href="#" underline="hover" color="inherit">{params.value}</Link>)
+      }
     },
     {
       field: 'FundName',
       headerName: 'Name',
       width: 300,
-      hideable: false
+      hideable: false,
+      renderCell: (params) => {
+        return (<Link href="#" underline="hover" color="inherit">{params.value}</Link>)
+      }
     },
     {
       field: 'Exchange',
@@ -239,10 +251,7 @@ const SelectableDataTable: React.FC<ComponentProps> = props => {
       description: 'Asset Under Management (as of June 2019, 2021)',
       width: 120,
       type: 'number',
-      // valueFormatter: (params: GridValueFormatterParams) => {
-      //   const valueFormatted = Number(params.value as number).toFixed(2);
-      //   return `$ ${valueFormatted}`
-      // },
+
       valueGetter: (params: GridValueGetterParams) => {
         return currency === 'Fund currency' ? `${params.row.FundCurrency || ''}${currency_formatter(params.row.AUM, currency)}` : `${currency_formatter(params.row.AUM, currency)}`
       }
@@ -276,13 +285,19 @@ const SelectableDataTable: React.FC<ComponentProps> = props => {
       field: 'ExchangeTicker',
       headerName: 'Ticker',
       width: 100,
-      hideable: false
+      hideable: false,
+      renderCell: (params) => {
+        return (<Link href="#" underline="hover" color="inherit">{params.value}</Link>)
+      }
     },
     {
       field: 'FundName',
       headerName: 'Name',
       width: 300,
-      hideable: false
+      hideable: false,
+      renderCell: (params) => {
+        return (<Link href="#" underline="hover" color="inherit">{params.value}</Link>)
+      }
     },
     {
       field: '1M',
@@ -363,11 +378,17 @@ const SelectableDataTable: React.FC<ComponentProps> = props => {
       field: 'ExchangeTicker',
       headerName: 'Ticker',
       width: 100,
+      renderCell: (params) => {
+        return (<Link href="#" underline="hover" color="inherit">{params.value}</Link>)
+      }
     },
     {
       field: 'FundName',
       headerName: 'Name',
       width: 300,
+      renderCell: (params) => {
+        return (<Link href="#" underline="hover" color="inherit">{params.value}</Link>)
+      }
     },
     {
       field: '1Y',
@@ -417,11 +438,17 @@ const SelectableDataTable: React.FC<ComponentProps> = props => {
       field: 'ExchangeTicker',
       headerName: 'Ticker',
       width: 100,
+      renderCell: (params) => {
+        return (<Link href="#" underline="hover" color="inherit">{params.value}</Link>)
+      }
     },
     {
       field: 'FundName',
       headerName: 'Name',
       width: 300,
+      renderCell: (params) => {
+        return (<Link href="#" underline="hover" color="inherit">{params.value}</Link>)
+      }
     },
     {
       field: 'Currency',
@@ -518,6 +545,85 @@ const SelectableDataTable: React.FC<ComponentProps> = props => {
     },
     ]
 
+  const columns_div: GridColDef[] = [
+    {
+      field: 'ExchangeTicker',
+      headerName: 'Ticker',
+      width: 100,
+      hideable: false,
+      renderCell: (params) => {
+        return (<Link href="#" underline="hover" color="inherit">{params.value}</Link>)
+      }
+    },
+    {
+      field: 'FundName',
+      headerName: 'Name',
+      width: 300,
+      hideable: false,
+      renderCell: (params) => {
+        return (<Link href="#" underline="hover" color="inherit">{params.value}</Link>)
+      }
+    },
+    {
+      field: 'DistributionIndicator',
+      headerName: 'Dividend Treatment',
+      width: 180,
+      hideable: false
+    },
+    {
+      field: 'CashFlowFrequency',
+      headerName: 'Dividend Frequency',
+      width: 180,
+      hideable: false
+    },
+    {
+      field: 'exDivDate',
+      headerName: 'ex-Dividend Date',
+      width: 150,
+      hideable: false
+    },
+    {
+      field: 'Dividend',
+      headerName: 'Last Dividend',
+      description: 'Asset Under Management (as of June 2019, 2021)',
+      width: 120,
+      type: 'number',
+      valueGetter: (params: GridValueGetterParams) => {
+        return `${currency_formatter(params.row.Dividend, params.row.Currency) || ''}`
+      }
+    },
+    {
+      field: 'Yield',
+      headerName: 'Yield (%)',
+      type: 'number',
+      minWidth: 100,
+      flex: 1,
+      valueFormatter: digits_formatter,
+    },
+    {
+      field: 'DivGrowth',
+      headerName: 'Div Growth',
+      type: 'number',
+      minWidth: 100,
+      flex: 1,
+      valueGetter: (params: GridValueGetterParams) => {
+        return `${currency_formatter(params.row.Dividend, params.row.Currency) || ''}`
+      },
+      // valueFormatter: digits_formatter,
+      cellClassName: str_color_formatter,
+    },
+    {
+      field: 'DivGrowthPct',
+      headerName: 'Div Growth (%)',
+      type: 'number',
+      minWidth: 130,
+      flex: 1,
+      valueFormatter: digits_formatter,
+      cellClassName: number_color_formatter,
+    },
+    ]
+
+
 
   const rows = props.args.data;
   let columns : GridColDef[] = []
@@ -536,8 +642,12 @@ const SelectableDataTable: React.FC<ComponentProps> = props => {
       }  
     } else if (display === 'Fund Flow') {
       columns = columns_flow
-    } else {
+    } else if (display === 'Income'){
+      columns = columns_div
+    }else {
+
     }
+    
 
   const columnsHide = (headers) => {
     interface hideColumnsType {
