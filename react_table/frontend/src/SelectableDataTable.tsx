@@ -668,13 +668,15 @@ const SelectableDataTable: React.FC<ComponentProps> = props => {
   }
     
   return (
-     <div style={{ height: 700, width: 500 }}>
+     <div style={{ height: 700, width: '100%' }}>
      <DataGrid
         rows={rows}
         columns={columns}
         pageSize={10}
         rowsPerPageOptions={[10]}
         checkboxSelection
+        loading={rows.length === 0}
+        rowHeight={50}
         //disableSelectionOnClick
 
         onSelectionModelChange={(newSelectionModel) => {
