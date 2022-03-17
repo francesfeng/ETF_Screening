@@ -38,12 +38,15 @@ if 'default_page' not in st.session_state:
   st.session_state.default_page = 0
 #-------------------------------------------------------Menu
 
-compare_item = "compare" + (' (' + str(len(st.session_state.compare)) + ')' if len(st.session_state.compare) > 0 else '')
+if 'etfs' not in st.session_state:
+  st.session_state.etfs = []
 
-main_menu = option_menu(None, ["ETF Screening", compare_item , "Portfolio"], 
-    icons=['fullscreen-exit', 'chevron-bar-contract', "bounding-box"], 
-    menu_icon="cast", default_index=st.session_state.default_page , orientation="horizontal")
-#main_menu
+def add_compare():
+  st.session_state.etfs.append(1)
+
+
+st.write('This is home page')
+st.button('Add ETF', on_click = add_compare)
 
 script = 'screening'
 if main_menu == 'ETF Screening':

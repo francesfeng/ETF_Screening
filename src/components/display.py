@@ -49,7 +49,7 @@ from src.components.com_components import div_table
 
 
 def display_header(etf_info):
-	st.header(etf_info['Name'])
+	st.title(etf_info['Name'])
 	st.markdown(etf_info['ExchangeTicker'] + """     -      """ + etf_info['ISINCode'])
 	st.markdown("***")
 	cols_headers = st.columns([1,1,1,1,1,1,1,1])

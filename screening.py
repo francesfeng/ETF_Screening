@@ -179,12 +179,20 @@ def update_selections(selected_etf):
       if i[0] not in st.session_state.main_menu:
         st.session_state.main_menu.insert(1, i[0]) 
         st.session_state.msg = ('success', i[1] + ' is opened in the top menu')
+        title = i[1].lower().split()
+        title = '-'.join(title)        
+        st.markdown('['+i[1]+'](#'+title+')', unsafe_allow_html=True)
+        display_etf(i[0], st.session_state.display_data, conn)
       else:
         st.session_state.msg = ('warning', i[1] + ' already opened in the top menu')
+
+      
   else:
     st.session_state.msg = ('none', '')
 
   st.session_state.pre_select = [i[0] for i in selected_etf]
+
+
   return 
 
 

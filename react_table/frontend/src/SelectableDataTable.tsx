@@ -174,7 +174,7 @@ const SelectableDataTable: React.FC<ComponentProps> = props => {
       width: 300,
       hideable: false,
       renderCell: (params) => {
-        return (<Link href="${params.row.FundName}" underline="hover" color="inherit">{params.value}</Link>)
+        return (<Link href="#" underline="hover" color="inherit">{params.value}</Link>)
       }
     },
     {
@@ -668,7 +668,7 @@ const SelectableDataTable: React.FC<ComponentProps> = props => {
   }
     
   return (
-     <div style={{ height: 700, width: 2000 }}>
+     <div style={{ height: 700, width: 500 }}>
      <DataGrid
         rows={rows}
         columns={columns}

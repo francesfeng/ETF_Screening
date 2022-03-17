@@ -3,24 +3,24 @@ import pandas as pd
 import numpy as np
 import datetime
 from src.data import get_etf_overview
-from src.data import get_tr
+from src.data import get_price
 from src.data import normalise
-from src.data import get_perf_period
+#from src.data import get_perf_period
 from src.data import volatility
-from src.data import get_vol_period
+#from src.data import get_vol_period
 from src.data import drawdown
-from src.data import get_drawdown_period
+#from src.data import get_drawdown_period
 from src.data import get_holding
 from src.data import get_fundflow
 from src.data import get_dividend
 from src.data import get_div_latest
 from src.data import init_data
 
-from src.components import compare_table
-from src.components import perf_compare_table
-from src.components import holding_table
-from src.components import performance_table
-from src.components import div_table
+from src.components.com_components import compare_table
+from src.components.com_components import perf_compare_table
+from src.components.com_components import holding_table
+from src.components.com_components import performance_table
+from src.components.com_components import div_table
 
 from src.viz import performance_graph
 from src.viz import legend_graph
@@ -109,7 +109,7 @@ def app(conn):
 			# latest = min(launch_dates)
 
 			names_pd = pd.DataFrame(zip(isins,[v['Name'] for k, v in st.session_state.compare_detail.items()]), columns=['ISINCode','FundName'])
-			perf_cum = get_tr(isins, None,conn)
+			perf_cum = get_price(isins, None,conn)
 			cumulative, cum_col, annualised, ann_col, calendar, cal_col = get_perf_period(isins, st.session_state.display_data['performance'] ,names_pd, conn)
 			legend = legend_graph(names_pd, 'FundName',names_pd['FundName'].to_list() )
 		 
