@@ -192,7 +192,6 @@ def get_exchanges(conn, include_all = False):
     exchanges = pd.read_sql(api.get_exchanges(), con=conn)
     if include_all == True:
         exchanges = pd.concat([pd.DataFrame([[' ', 'All', ' ']], columns = exchanges.columns), exchanges], axis=0, ignore_index=True)
-    st.write(exchanges)
     return exchanges.to_records()
 
 
