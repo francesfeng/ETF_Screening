@@ -4,6 +4,12 @@ import pandas as pd
 import numpy as np
 import datetime
 
+
+
+from src.data import get_equity_indices
+from src.data import get_equity_indices_names
+from src.data import get_etfs_lst
+from src.data import get_etf_overview
 from src.data import get_listing
 from src.data import get_etf_details
 from src.data import format_flow
@@ -13,13 +19,11 @@ from src.data import add_compare_prices
 from src.data import calc_cum_returns
 from src.data import calc_ann_returns
 from src.data import calc_cal_returns
-
 from src.data import normalise
 from src.data import volatility
 from src.data import calc_vol_period
 from src.data import drawdown
 from src.data import calc_drawdown_period
-
 from src.data import get_holding
 from src.data import get_fundflow
 from src.data import get_flow_period
@@ -28,6 +32,7 @@ from src.data import add_compare_flow
 from src.data import get_flow_period
 from src.data import get_dividend
 from src.data import get_div_latest
+from src.data import get_similar_etfs_detail
 
 from src.viz import performance_line_simple
 from src.viz import draw_radar_graph
@@ -46,11 +51,33 @@ from src.components.com_components import metric
 from src.components.com_components import performance_table
 from src.components.com_components import table_num
 from src.components.com_components import div_table
+from src.components.com_components import similar_etfs_table
+
+def remove_etf(ticker):
+	pos = np.where(np.array(st.session_state.main_menu) == ticker)[0][0]
+	st.session_state.main_menu.remove(ticker)
+	st.session_state.msg = ('None', )
+	# if pos >= len(st.session_state.main_menu):
+	# 	st.session_state.default_page = len(st.session_state.main_menu) -1 
+	# else:
+	# 	st.session_state.default_page = pos
+
+	# return 
 
 
 def display_header(etf_info):
-	st.title(etf_info['Name'])
-	st.markdown(etf_info['ExchangeTicker'] + """     -      """ + etf_info['ISINCode'])
+	st.write('<style>div.row-widget.stButton > button{float: right;}</style>', unsafe_allow_html=True)
+	col_title = st.columns([11,1])
+	col_title[0].title(etf_info['Name'])
+	with col_title[1]:
+		st.write('')
+		st.write('')
+		st.button('❌', help='Remove from the menu', on_click=remove_etf, args=(etf_info['ExchangeTicker'],))
+
+	col_subtitle = st.columns([6,1,1])
+	col_subtitle[0].markdown(etf_info['ExchangeTicker'] + """     -      """ + etf_info['ISINCode'])
+	col_subtitle[1].button('Add to compare', )
+	col_subtitle[2].button('Add to portfolio',)
 	st.markdown("***")
 	cols_headers = st.columns([1,1,1,1,1,1,1,1])
 	cols_headers[0].metric(label="NAV (1M %)", value=etf_info['NAV'], delta=str(etf_info['NAV_1MChange'])+'%')
@@ -239,9 +266,17 @@ def display_listing(isin, conn):
 	return
 
 
-def display_performance(isin, fundname, indices, etfs, conn):
-	perf_cum = get_price([isin], conn)
-	perf_date_min = perf_cum['Dates'].iloc[0]
+def display_performance(isin, fundname, indices, etfs, conn, tickers=None):
+	if type(isin) == str:
+		initial_name = [(isin, fundname)]
+		isin = [isin]
+		fundname = [fundname]
+
+	else:
+		initial_name = [(isin[i], fundname[i]) for i in range(len(isin))]
+
+	perf_cum = get_price(isin, conn, None, None, 'NAV')
+	perf_date_min = perf_cum['Dates'].iloc[0] if len(isin) == 0 else max(perf_cum.groupby('ISINCode')['Dates'].min())
 	perf_date_max = perf_cum['Dates'].iloc[-1]
 
 	perf_default_date = max(perf_date_max - datetime.timedelta(days=3652), perf_date_min)
@@ -256,15 +291,19 @@ def display_performance(isin, fundname, indices, etfs, conn):
 
 	with col_compare_header[1]:
 		compare_type = st.radio('Add to chart', ['Equity indices', 'ETFs'])
-		compare_lst = indices if compare_type == 'Equity indices' else etfs
+		if tickers is None:
+			compare_lst = indices if compare_type == 'Equity indices' else etfs 
+		else:
+			compare_lst = indices if compare_type == 'Equity indices' else [i for i in etfs if i[2] not in tickers] 
+
 		compare_select = st.multiselect('', compare_lst, format_func = lambda x: x[2] + ' ' + x[3])
 
-	prices, names_pd = add_compare_prices(compare_select, compare_type, \
-                                          perf_cum, [(isin, fundname)], \
+	prices_tr, names_pd = add_compare_prices(compare_select, compare_type, \
+                                          perf_cum, initial_name, \
                                           min(perf_date_min, perf_date_max - datetime.timedelta(3652)), None, 'Total Return',\
                                           conn)
 
-	cumulative, cum_periods = calc_cum_returns(prices, perf_date_max, names_pd)
+	cumulative, cum_periods = calc_cum_returns(prices_tr, perf_date_max, names_pd)
 	legend = legend_graph(names_pd, 'Name',names_pd['Name'].to_list() )
 
 	if perf_select == 'Cumulative' or perf_select == 'Volatility' or perf_select=='Max Drawdown':
@@ -287,16 +326,16 @@ def display_performance(isin, fundname, indices, etfs, conn):
 		if price_type == 'NAV':
 
 			prices_nav, _ = add_compare_prices(compare_select, compare_type, \
-                                          perf_cum, [(isin, fundname)], \
-                                          min(perf_date_min, perf_date_max - datetime.timedelta(3652)), None, 'NAV',\
+                                          perf_cum, initial_name, \
+                                          perf_date_min, None, 'NAV',\
                                           conn)
 			prices_display = prices_nav[(prices_nav['Dates'] >= perf_start) & (prices_nav['Dates'] <= perf_end)]
 
 		else:
-			prices_display = prices[(prices['Dates'] >= perf_start) & (prices['Dates'] <= perf_end)]
+			prices_display = prices_tr[(prices_tr['Dates'] >= perf_start) & (prices_tr['Dates'] <= perf_end)]
 
 		if perf_select == 'Cumulative':
-			if len(compare_select) > 0:
+			if len(compare_select) > 0 or len(isin)>1:
 				prices_display = normalise(prices_display, names_pd)
 
 			alt_cum = performance_graph(prices_display, 'Price',names_pd['Name'].to_list() , names_pd, '.1f', 'Name')
@@ -314,7 +353,7 @@ def display_performance(isin, fundname, indices, etfs, conn):
 			alt_vol = performance_graph(vol, 'Volatility',names_pd['Name'].to_list() , names_pd, '.1%', 'Name')
 			st.altair_chart(alt_vol, use_container_width=True)
 
-			vol_cum, vol_periods = calc_vol_period(prices, perf_date_max ,names_pd)
+			vol_cum, vol_periods = calc_vol_period(prices_tr, perf_date_max ,names_pd)
 			performance_table(vol_cum.to_dict(orient='records'), vol_periods)
 
 		#-------------------------------------------------------------------------------------- Max drawdown
@@ -327,7 +366,7 @@ def display_performance(isin, fundname, indices, etfs, conn):
 
 			alt_dd = performance_graph(dd, 'Drawdown',names_pd['Name'].to_list() , names_pd, '.1%', 'Name')
 			st.altair_chart(alt_dd, use_container_width=True)
-			dd_period, dd_dates, dd_names = calc_drawdown_period(prices, perf_date_max, names_pd)
+			dd_period, dd_dates, dd_names = calc_drawdown_period(prices_tr, perf_date_max, names_pd)
 			performance_table(dd_period, dd_names, dd_dates)
 
 	#-------------------------------------------------------------------------------------- Annualised
@@ -355,7 +394,7 @@ def display_performance(isin, fundname, indices, etfs, conn):
 
 	#-------------------------------------------------------------------------------------- Calender
 	if perf_select == 'Calendar':
-		calendar, cal_periods = calc_cal_returns(prices, perf_date_min, perf_date_max, names_pd)
+		calendar, cal_periods = calc_cal_returns(prices_tr, perf_date_min, perf_date_max, names_pd)
 		st.altair_chart(legend, use_container_width=True)
 
 		with col_compare_header[0]:
@@ -431,9 +470,15 @@ def display_holding(isin, conn):
 	return
 
 
-def display_fundflow(isin, fundname, etfs_list, conn):
-
-	flow_monthly = get_fundflow([isin], 'flow_USD', conn)
+def display_fundflow(isin, fundname, etfs, conn, tickers=None):
+	if type(isin) == str:
+		original_name = [(isin, fundname)]
+		isin = [isin]
+		fundname = [fundname]
+	else:
+		original_name = [(isin[i], fundname[i]) for i in range(len(isin))]
+		
+	flow_monthly = get_fundflow(isin, 'flow_USD', conn)
 
 	col_flow_header = st.columns(2)
 
@@ -442,7 +487,11 @@ def display_fundflow(isin, fundname, etfs_list, conn):
 		st.caption('Total returns are shown on a Net Asset Value (NAV) basis, with gross income reinvested for dividend paying ETFs.')
 
 	with col_flow_header[1]:
-		compare_select = st.multiselect('Add to chart', etfs_list, format_func = lambda x: x[2] + ' ' + x[3])
+		if tickers is None:
+			compare_list = etfs
+		else:
+			compare_list = [i for i in etfs if i[2] not in tickers]
+		compare_select = st.multiselect('Add to chart', compare_list, format_func = lambda x: x[2] + ' ' + x[3])
 
 	flow_date_min = min(flow_monthly['Dates'])
 	flow_date_max = max(flow_monthly['Dates'])
@@ -453,7 +502,7 @@ def display_fundflow(isin, fundname, etfs_list, conn):
 		flow_currency_select = st.radio('Currency', ['USD', 'GBP', 'EUR'], key='flow2')
 
 	with col_flow_header1[1]:
-		period_select = st.radio('Period', ['1Y', '3Y', '5Y', '10Y', 'All', 'Custom period'], index=1, key='flow_period')
+		period_select = st.radio('Period', ['1Y', '3Y', '5Y', '10Y', 'All', 'Custom period'], index=0, key='flow_period')
 
 		if period_select == 'Custom period':
 			flow_from = col_flow_header1[2].date_input('From', value=max(flow_date_min, flow_date_max-datetime.timedelta(365)), min_value=flow_date_min, max_value=flow_date_max)
@@ -465,7 +514,7 @@ def display_fundflow(isin, fundname, etfs_list, conn):
 	flow_start, flow_end = calc_date_range(period_select, flow_from, flow_to, flow_date_min, flow_date_max)
 
 	flows, flow_names_pd = add_compare_flow(compare_select, flow_currency_select, \
-                                            flow_monthly, [(isin, fundname)], \
+                                            flow_monthly, original_name, \
                                             flow_start, flow_end, conn
                                             )
 
@@ -517,7 +566,54 @@ def display_dividend(isin, fundname, conn):
 
 
 
+def display_etf(etf_ticker, display_data, conn):
+  etf_info, navs = get_etf_overview(etf_ticker, display_data, conn)
+  indices = get_equity_indices_names(conn)
+  etfs = get_etfs_lst(conn, st.session_state.exchange[3])
 
+
+  display_header(etf_info)
+
+  with st.expander('Overview', expanded=True):
+    display_overview(etf_info, navs)
+   
+
+  with st.expander('Fund Details', expanded=True):
+    display_detail(etf_info['ISINCode'], etf_info, conn)
+
+
+  with st.expander('Listing', expanded=False):
+    display_listing(etf_info['ISINCode'], conn)
+
+
+  with st.expander('Performance', expanded=False):
+    display_performance(etf_info['ISINCode'], etf_info['Name'], indices, etfs, conn)
+    
+  #-------------------------------------------------------------------------------------- Holding
+  with st.expander('Holdings'):
+    display_holding(etf_info['ISINCode'], conn)
+   
+  #-------------------------------------------------------------------------------------- Fund Flow
+  with st.expander('Fund Flow', expanded=False):
+    display_fundflow(etf_info['ISINCode'], etf_info['Name'], etfs, conn)
+
+  #-------------------------------------------------------------------- Dividend
+  if etf_info['Distribution'] == 'Distributing':
+    with st.expander('Dividend', expanded=False):
+
+      display_dividend(etf_info['ISINCode'], etf_info['Name'], conn)
+
+    #-------------------------------------------------------------------- Similar ETFs
+  with st.expander('Similar ETFs', expanded=False):
+
+    for k, v in etf_info['Similar_ETFs'].items():
+      st.write('**'+k+'**')
+      similar_etfs_data, similar_etfs_header = get_similar_etfs_detail(v, conn)
+
+      similar_etfs_table(similar_etfs_data, similar_etfs_header)
+      st.write('')
+
+  return 
 
 
 

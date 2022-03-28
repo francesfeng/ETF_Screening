@@ -86,10 +86,15 @@ def get_exchanges():
 			) exchange_map ORDER BY count DESC"""
 	return query
 
-def get_etfs_list(exchange=None):
-	query = """ SELECT "ISINCode", "ExchangeTicker", "FundName" FROM gcp_funds """
+def get_etfs_list(exchange=None, include_class = False):
+	if include_class == False:
+		query = """ SELECT "ISINCode", "ExchangeTicker", "FundName" FROM gcp_funds """
+	else: 
+		query = """ SELECT "ISINCode", "ExchangeTicker", "FundName", "Sector" FROM gcp_funds """
 	if exchange is not None:
 		query += """ WHERE "Exchange" = '""" + exchange + """' """
+
+	query += """ ORDER BY "AUM_USD" DESC NULLS LAST"""
 	return query
 
 
@@ -171,11 +176,19 @@ def get_similar_etfs(isin):
 
 	return query
 
-def get_top5_holding(isin):
-	query = get_by_isin(isin, 'calc_holding_all', ["InstrumentDescription", "Weight", "Country"])
+def get_top5_holding(isin, include_isin = False):
+	cols = []
+	if include_isin == True:
+		cols = ['ISINCode'] + cols
+	query = get_by_isin(isin, 'calc_holding_all', ["ISINCode", "TimeStamp" ,"InstrumentDescription", "Weight", "Country"])
+
+	query = """	SELECT "ISINCode", "InstrumentDescription", "Weight", "Country" FROM (
+				SELECT *, Last_VALUE("TimeStamp") OVER (PARTITION BY "ISINCode" RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS latest
+				FROM (""" + query + """ AND "Rank" <= 10 ) AS holding  
+				) AS holding_rank WHERE "TimeStamp" = latest """
 
 	query = """ SELECT * FROM (
-				( """ + query + """ LIMIT 10) AS holding
+				( """ + query + """) AS holding_top10
 				LEFT JOIN (SELECT "Country", "Flag" FROM country_list ) AS flags
 				USING("Country")
 			) AS flag_map """
@@ -345,22 +358,6 @@ def get_similar_etfs_details(isins):
 	return query
 
 
-def get_unique_fund_list():
-	query = """SELECT "ISINCode", "FundName", ("Flag"||' '||"ExchangeTicker") AS "Tickers", "ClassLevel1" AS "Sector",  "Exchange" FROM (
-	(SELECT "ISINCode", "FundName" FROM funds) AS funds
-	LEFT JOIN 
-	(SELECT "ISINCode", "Exchange", "ExchangeTicker" FROM tickers) AS tickers
-	USING("ISINCode")
-	LEFT JOIN (SELECT "Exchange", "Flag" FROM country_list) AS flags
-	USING("Exchange")
-	LEFT JOIN(SELECT "ISINCode", "AUM_USD" FROM latest_nav_shares) as aums
-	USING("ISINCode")
-	LEFT JOIN(SELECT "ISINCode", "ClassLevel1" FROM class_copy) as classification
-	USING("ISINCode")
-	) all_map ORDER BY "AUM_USD" DESC NULLS LAST """
-
-	return query
-
 def get_equity_indices_names():
 	return """SELECT "Ticker", "Flag", "Name" FROM (
 			(SELECT *, ROW_NUMBER() OVER() AS row_order FROM "equity_indices_list" ) as indices
@@ -393,5 +390,84 @@ def get_fundflow(isins, currency_col ,start_date = None, end_date=None):
 
 	return query
 
+def get_benchmark_port():
+	return """SELECT DISTINCT("Portfolio") FROM portfolios ORDER BY "Portfolio" """
 
+def get_benchmark_weight(name):
+	return """ SELECT "ISINCode", "Weight" FROM portfolios WHERE "Portfolio" = '""" + eval('name') + """' """
+
+def get_sector(isins):
+	query = get_by_isin(isins, 'gcp_funds', ['ISINCode', 'FundName', 'AssetClass', 'Sector'])
+	query = """select DISTINCT("ISINCode"), "FundName", ("AssetClass" || ' - ' || "Sector") AS "Sector" 
+	from ( """ +query + """) as sectors """
+	return query
+
+
+def get_usd_prices(isins):
+	nav = get_by_isin(isins, 'nav_shares_map', ["ISINCode", "TimeStamp", "Currency", "NAV"])
+	tr = get_by_isin(isins, 'total_return', ["ISINCode", "TimeStamp", "TotalReturn"])
+
+	query = """SELECT "ISINCode", "TimeStamp", "NAV_USD", "TR_USD", "FX_GBP", "FX_EUR" FROM (
+		(SELECT "ISINCode","TimeStamp", "Currency", "NAV", "TotalReturn", "FX",
+		CASE 
+			WHEN "Currency" = 'USD' THEN "NAV"
+			WHEN "Currency" = 'GBX' THEN "NAV" * "FX" / 100
+			WHEN "Currency" = 'GBP' OR "Currency" = 'EUR' OR "Currency" = 'AUD' OR "Currency" = 'NZD' THEN "NAV" * "FX"
+			ELSE "NAV"/"FX" END "NAV_USD",  
+		CASE 
+			WHEN "Currency" = 'USD' THEN "TotalReturn"
+			WHEN "Currency" = 'GBX' THEN "TotalReturn" * "FX" / 100
+			WHEN "Currency" = 'GBP' OR "Currency" = 'EUR' OR "Currency" = 'AUD' OR "Currency" = 'NZD' THEN "TotalReturn" * "FX"
+			ELSE "TotalReturn"/"FX" END "TR_USD"   
+		FROM (
+			SELECT * FROM (
+				(SELECT *,EXTRACT(isodow FROM "TimeStamp") AS "WeekDay",
+					CASE
+						WHEN "Currency" = 'GBX' THEN 'GBP='
+						ELSE "Currency"||'=' END "FXTicker" FROM ( """ + nav + """ ) as nav_query ) AS a
+				LEFT JOIN (""" + tr + """) as b
+				USING("ISINCode", "TimeStamp")
+				LEFT JOIN (SELECT "TimeStamp", "FXTicker", "FX" FROM fxes) AS c
+				USING ("TimeStamp", "FXTicker")
+				) AS map where "WeekDay" <=5 
+			) AS period_map 
+		) extract_map 
+		LEFT JOIN (SELECT "TimeStamp", "FX" AS "FX_GBP" FROM fxes WHERE "FXTicker" = 'GBP=') AS gbp
+		USING("TimeStamp")
+		LEFT JOIN (SELECT "TimeStamp", "FX" AS "FX_EUR" FROM fxes WHERE "FXTicker" = 'EUR=') AS eur
+		USING("TimeStamp")
+	) AS fx_map ORDER BY "ISINCode", "TimeStamp"  """
+
+	return query
+
+
+def get_usd_div(isins):
+	div = get_by_isin(isins, 'calc_div_yield', ["ISINCode", "TimeStamp", "Currency","Dividend"])
+
+	query = """SELECT "TimeStamp", "ISINCode", "DIV_USD", "FX_GBP", "FX_EUR" FROM (
+			(SELECT "ISINCode","TimeStamp", "Currency", "Dividend", "FX",
+		        CASE 
+		            WHEN "Currency" = 'USD' THEN "Dividend"
+		            WHEN "Currency" = 'GBX' THEN "Dividend" * "FX" / 100
+		            WHEN "Currency" = 'GBP' OR "Currency" = 'EUR' OR "Currency" = 'AUD' OR "Currency" = 'NZD' THEN "Dividend" * "FX"
+		            ELSE "Dividend"/"FX" END "DIV_USD"   
+		    FROM (
+		        SELECT * FROM (
+					(SELECT *,
+						EXTRACT(isodow FROM "TimeStamp") AS "WeekDay",
+						CASE
+							WHEN "Currency" = 'GBX' THEN 'GBP='
+							ELSE "Currency"||'=' END "FXTicker" FROM ( """ + div + """) as div ) AS a
+					LEFT JOIN (SELECT "TimeStamp", "FXTicker", "FX" FROM fxes) AS c
+					USING ("TimeStamp", "FXTicker")
+		            ) AS map where "WeekDay" <=5 
+		    	) AS period_map 
+			) extract_map 
+			LEFT JOIN (SELECT "TimeStamp", "FX" AS "FX_GBP" FROM fxes WHERE "FXTicker" = 'GBP=') AS gbp
+			USING("TimeStamp")
+			LEFT JOIN (SELECT "TimeStamp", "FX" AS "FX_EUR" FROM fxes WHERE "FXTicker" = 'EUR=') AS eur
+			USING("TimeStamp")
+		) AS fx_map ORDER BY "ISINCode", "TimeStamp" """
+
+	return query
 

@@ -675,7 +675,7 @@ const SelectableDataTable: React.FC<ComponentProps> = props => {
         pageSize={10}
         rowsPerPageOptions={[10]}
         checkboxSelection
-        loading={rows.length === 0}
+        loading={rows.length === 0} // horizontal scrolling bar shows
         rowHeight={50}
         //disableSelectionOnClick
 

@@ -175,26 +175,46 @@ def holding_table(data):
 			if i == 0:
 				if j==0:
 					col.markdown(cell_color_text('Top 10 Holdings (%)', i%2+1,is_header=True), unsafe_allow_html=True)
-				elif j%2 == 0:
-					holdings = data[tickers[int(j/2)-1]]
-					weight = round(sum([i['Weight'] for i in holdings]),2)
-					col.markdown(cell_color_text(weight, i%2+1, is_header=True), unsafe_allow_html=True)
+				
 				else:
-					col.markdown(cell_color_text('_', i%2+1), unsafe_allow_html=True)
+					holdings = data[tickers[int((j-1)/2)]]
+					if len(holdings) < 10:
+						if (j%2 ==1):
+							col.warning('missing data')
+					else:
+						if j%2 == 0:
+							weight = round(sum([i['Weight'] for i in holdings]),2)
+							col.markdown(cell_color_text(weight, i%2+1, is_header=True), unsafe_allow_html=True)
+						else:
+							col.markdown(cell_color_text('_', i%2+1), unsafe_allow_html=True)
 			else:
+
 				if j == 0:
 					col.markdown(cell_color_text(table_header[i], i%2+1 ,is_header=True), unsafe_allow_html=True)
 				else:
-					ticker = tickers[int(j/2)-1]
-					if j%2 == 1: 
-						col.markdown(cell_color_text(data[ticker][i-1]['Name'], i%2+1, align='left'), unsafe_allow_html=True)
-					else:
-						col.markdown(cell_color_text(data[ticker][i-1]['Weight'], i%2+1), unsafe_allow_html=True)
+					ticker = tickers[int((j-1)/2)]
+					if len(data[ticker]) < 10: #skip if no holding data
+						continue
+					else:					
+						if j%2 == 1: 
+							col.markdown(cell_color_text(data[ticker][i-1]['Name'], i%2+1, align='left'), unsafe_allow_html=True)
+						else:
+							col.markdown(cell_color_text(data[ticker][i-1]['Weight'], i%2+1), unsafe_allow_html=True)
 
 	return
 
 
+def display_msg(msg):
+	if msg[0] == 'Success':
+		st.success(msg[1])
+	elif msg[0] == 'Fail':
+		st.warning(msg[1])
+	elif msg[0] == 'Info':
+		st.info(msg[1])
+	else:
+		st.empty()
 
+	return
 
 
 
