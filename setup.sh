@@ -14,8 +14,8 @@ secondaryBackgroundColor=\"#F7F8FA\"\n\
 textColor=\"#212121\"\n\
 [runner]\n\
 magicEnabled = false\n\
-[global]\n\
-dataFrameSerialization = \"legacy\"\n\
+[client]\n\
+showErrorDetails = false\n\
 [server]\n\
 headless = true\n\
 port = $PORT\n\
