@@ -6,17 +6,18 @@ email = \"ffan1201@gmail.com\"\n\
 " > ~/.streamlit/credentials.toml
 
 
-echo "[theme]
-primaryColor="#1830B7"
-backgroundColor="#FFFFFF"
-secondaryBackgroundColor="#F7F8FA"
-textColor="#212121"
-[runner]
-magicEnabled = false
-[global]
-dataFrameSerialization = "legacy"
-[server]
-headless = true
-port = $PORT
-enableCORS = false
+echo "\
+[theme]\n\
+primaryColor=\"#1830B7\"\n\
+backgroundColor=\"#FFFFFF\"\n\
+secondaryBackgroundColor=\"#F7F8FA\"\n\
+textColor=\"#212121\"\n\
+[runner]\n\
+magicEnabled = false\n\
+[global]\n\
+dataFrameSerialization = \"legacy\"\n\
+[server]\n\
+headless = true\n\
+port = $PORT\n\
+enableCORS = false\n\
 " > ~/.streamlit/config.toml
