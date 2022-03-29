@@ -30,7 +30,9 @@ COPY requirements.txt app/requirements.txt
 RUN apk add --no-cache --virtual build-dependencies python3 \
     && apk add --virtual build-runtime \
     build-base python3-dev openblas-dev freetype-dev pkgconfig gfortran \
+    && apk add --upgrade py-pip py3-psutil \
     && apk add --no-cache postgresql-libs \
+    && apk add --no-cache linux-headers \
  	&& apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev  \
     && ln -s /usr/include/locale.h /usr/include/xlocale.h \
     && python3 -m ensurepip \
@@ -45,18 +47,7 @@ RUN apk add --no-cache --virtual build-dependencies python3 \
     && apk --purge del .build-deps \
     && rm -rf /var/cache/apk/*
 
-#RUN echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
-#RUN apk add --update --no-cache py3-numpy py3-pandas@testing
-#ENV PYTHONPATH=/usr/lib/python3.8/site-packages
 
-
-
-#To install numpy, scipy, or gensim, the following 3 lines needed; 
-#The first two lines install the C build tools required for the libraries. 
-#The tihrd line upgrades pip to the newest available version.
-#RUN apt-get -y install libc-dev
-#RUN apt-get -y install build-essential
-#RUN pip install -U pip
 
 
 #install all requirements in requirements.txt
