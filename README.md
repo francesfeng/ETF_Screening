@@ -1,4 +1,4 @@
-# react table custome component for streamlit
+# Workflow
 - Initalise the server
 ``` javascript
 $ cd react_table/frontend
