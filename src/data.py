@@ -13,6 +13,7 @@ import sqlalchemy
 
 @st.cache(allow_output_mutation=True, hash_funcs={"_thread.RLock": lambda _: None, 'builtins.weakref': lambda _: None})
 def init_connection():
+    st.write(os.environ["st_db"])
     return psycopg2.connect(**json.loads(os.environ["st_db"]))
 
 
