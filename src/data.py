@@ -13,10 +13,7 @@ import sqlalchemy
 
 @st.cache(allow_output_mutation=True, hash_funcs={"_thread.RLock": lambda _: None, 'builtins.weakref': lambda _: None})
 def init_connection():
-    st.write(os.environ["st_db"])
-    st.write("-----------------")
-    st.write(**os.environ["st_db"])
-    return psycopg2.connect(**os.environ["st_db"])
+    return psycopg2.connect(**st.secrets["do"])
 
 
 @st.cache(ttl=600,allow_output_mutation=True, hash_funcs={psycopg2.extensions.connection: lambda _: None})
